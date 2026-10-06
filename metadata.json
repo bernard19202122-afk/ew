@@ -1,0 +1,6 @@
+{
+  "name": "Elemental Wildguard",
+  "description": "Production-ready deterministic tactical tower defense game powered by PRD v2.2 with elemental synergies, 20 heroes, and comprehensive test suite.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
