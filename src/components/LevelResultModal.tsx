@@ -19,6 +19,7 @@ import {
   Sparkles,
   ArrowRight,
   TrendingUp,
+  Home,
 } from 'lucide-react';
 import { CAMPAIGN_LEVELS } from '../game/data/levelRegistry';
 import { sound } from '../game/audio/soundSynthesizer';
@@ -122,13 +123,32 @@ export const LevelResultModal: React.FC<LevelResultModalProps> = ({
           </span>
         </div>
 
-        {/* Title */}
-        <h2 className="text-2xl font-display font-extrabold text-white tracking-tight">
-          {isVictory ? 'STAGE CLEAR!' : 'GAME OVER'}
-        </h2>
-        <p className="text-xs text-slate-400 mt-1 max-w-xs">
-          {isVictory ? cfg.name : 'Command Core Breached!'}
-        </p>
+        {/* Title: Explicit Indonesian KAMU MENANG! / KAMU KALAH! */}
+        <div className="flex flex-col items-center">
+          <h2
+            className={`text-3xl sm:text-4xl font-display font-black tracking-wider uppercase drop-shadow-lg ${
+              isVictory
+                ? 'text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500'
+                : 'text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-red-300 to-rose-600'
+            }`}
+          >
+            {isVictory ? 'KAMU MENANG!' : 'KAMU KALAH!'}
+          </h2>
+          <span
+            className={`text-[11px] font-mono font-bold tracking-widest uppercase mt-1 px-3 py-0.5 rounded-full border ${
+              isVictory
+                ? 'bg-amber-950/70 text-amber-300 border-amber-500/60 shadow-[0_0_12px_rgba(245,158,11,0.35)]'
+                : 'bg-rose-950/70 text-rose-300 border-rose-500/60 shadow-[0_0_12px_rgba(244,63,94,0.35)]'
+            }`}
+          >
+            {isVictory ? 'VICTORY · STAGE DISELESAIKAN' : 'DEFEAT · BASE HANCUR'}
+          </span>
+          <p className="text-xs text-slate-300 mt-2 max-w-xs leading-relaxed">
+            {isVictory
+              ? `Pertahanan ${cfg.name} sukses! Semua ancaman musuh berhasil dihalau.`
+              : 'Pertahanan jebol! Musuh berhasil menembus dan menghancurkan Command Core.'}
+          </p>
+        </div>
 
         {/* Stars or Defeat Icon */}
         {isVictory ? (
@@ -221,21 +241,41 @@ export const LevelResultModal: React.FC<LevelResultModalProps> = ({
         )}
 
         {/* Action Buttons */}
-        <div className="w-full flex flex-col gap-2 mt-4">
+        <div className="w-full flex flex-col gap-2.5 mt-4">
+          {/* 1. Primary Action: Next Level if Victory, or Return to Lobby if Defeat */}
           {isVictory && currentLevel < 5 && (
             <button
               onClick={() => {
                 sound.playDeploy();
                 onNextLevel();
               }}
-              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-rose-950/50 transition-all cursor-pointer"
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-rose-950/50 transition-all cursor-pointer transform hover:scale-[1.02]"
             >
               <span>Next Level: LV-0{currentLevel + 1}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           )}
 
-          <div className="grid grid-cols-2 gap-2">
+          {/* Prominent KEMBALI KE LOBBY UTAMA Button (Requested: jika game sudah kalah atau menang balik ke lobby) */}
+          {onReturnToLobby && (
+            <button
+              onClick={() => {
+                sound.playClick();
+                onReturnToLobby();
+              }}
+              className={`w-full py-3 px-4 rounded-xl font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer transform hover:scale-[1.02] ${
+                !isVictory
+                  ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-950/60 ring-2 ring-emerald-400/50'
+                  : 'bg-slate-800 hover:bg-slate-700 text-emerald-300 hover:text-white border-2 border-emerald-500/50'
+              }`}
+            >
+              <Home className="w-4 h-4" />
+              <span>KEMBALI KE LOBBY UTAMA</span>
+            </button>
+          )}
+
+          {/* Secondary Action Buttons: Retry / Rematch & Peta Stage */}
+          <div className="grid grid-cols-2 gap-2 mt-0.5">
             <button
               onClick={() => {
                 sound.playClick();
@@ -243,12 +283,12 @@ export const LevelResultModal: React.FC<LevelResultModalProps> = ({
               }}
               className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 !isVictory
-                  ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-950/40'
-                  : 'bg-amber-600 hover:bg-amber-500 text-slate-950 font-extrabold shadow'
+                  ? 'bg-rose-600/90 hover:bg-rose-500 text-white shadow-md shadow-rose-950/40 border border-rose-400/40'
+                  : 'bg-amber-600/90 hover:bg-amber-500 text-slate-950 font-extrabold shadow'
               }`}
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>{isVictory ? 'REMATCH' : 'RETRY'}</span>
+              <span>{isVictory ? 'REMATCH' : 'COBA LAGI (RETRY)'}</span>
             </button>
 
             <button
@@ -259,21 +299,9 @@ export const LevelResultModal: React.FC<LevelResultModalProps> = ({
               className="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
               <MapPin className="w-3.5 h-3.5 text-amber-400" />
-              <span>{isVictory ? 'Peta Stage' : 'Peta Stage'}</span>
+              <span>PETA STAGE</span>
             </button>
           </div>
-
-          {onReturnToLobby && (
-            <button
-              onClick={() => {
-                sound.playClick();
-                onReturnToLobby();
-              }}
-              className="w-full py-2.5 px-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer mt-1"
-            >
-              <span>← Kembali ke Lobby Utama</span>
-            </button>
-          )}
         </div>
       </div>
     </div>

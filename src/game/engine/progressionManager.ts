@@ -87,6 +87,10 @@ export interface PlayerProgress {
 
   unlockedBadges: string[];
   unlockedHeroes: string[];
+  // PRD Addendum Section 8-11: Owned Heroes Collection
+  ownedHeroes: string[];
+  // PRD Addendum Section 13-17: Level-Specific Hero Loadout Storage
+  levelLoadouts: Record<number, string[]>;
   settings: PlayerSettings;
 }
 
@@ -133,6 +137,21 @@ export const ALL_20_HERO_IDS = [
   'Kai',
   'Tempest',
 ];
+
+export const STARTER_OWNED_HEROES = ['Pyra', 'Aqua', 'Terra', 'Aeris', 'Bronn', 'Ignis'];
+
+const DEFAULT_LEVEL_LOADOUTS: Record<number, string[]> = {
+  1: ['Pyra', 'Aqua', 'Terra'],
+  2: ['Aqua', 'Aeris', 'Terra'],
+  3: ['Terra', 'Pyra', 'Ignis'],
+  4: ['Aqua', 'Bronn', 'Pyra'],
+  5: ['Terra', 'Aqua', 'Aeris'],
+  6: ['Pyra', 'Aqua', 'Terra'],
+  7: ['Terra', 'Ignis', 'Aeris'],
+  8: ['Pyra', 'Bronn', 'Aqua'],
+  9: ['Aeris', 'Terra', 'Pyra'],
+  10: ['Pyra', 'Aqua', 'Terra', 'Aeris'],
+};
 
 const INITIAL_DEFAULT_SQUAD = ['Pyra', 'Aqua', 'Terra', 'Aeris', 'Bronn', 'Ignis'];
 
@@ -303,6 +322,8 @@ const DEFAULT_PROGRESS: PlayerProgress = {
   },
   unlockedBadges: [],
   unlockedHeroes: [...ALL_20_HERO_IDS],
+  ownedHeroes: [...STARTER_OWNED_HEROES],
+  levelLoadouts: { ...DEFAULT_LEVEL_LOADOUTS },
   settings: {
     volume: 0.8,
     musicVolume: 0.7,
@@ -419,6 +440,14 @@ class ProgressionManager {
         unlockedHeroes: Array.isArray(parsed.unlockedHeroes)
           ? parsed.unlockedHeroes
           : [...ALL_20_HERO_IDS],
+        ownedHeroes: Array.isArray(parsed.ownedHeroes) && parsed.ownedHeroes.length > 0
+          ? Array.from(new Set(parsed.ownedHeroes.filter((id: string) => ALL_20_HERO_IDS.includes(id))))
+          : [...STARTER_OWNED_HEROES],
+        levelLoadouts: this.sanitizeLevelLoadouts(
+          parsed.levelLoadouts,
+          baseLevel,
+          Array.isArray(parsed.ownedHeroes) && parsed.ownedHeroes.length > 0 ? parsed.ownedHeroes : STARTER_OWNED_HEROES
+        ),
         settings: {
           volume: Number(parsed.settings?.volume) ?? 0.8,
           musicVolume: Number(parsed.settings?.musicVolume) ?? 0.7,
@@ -447,6 +476,30 @@ class ProgressionManager {
       }
     }
     return unique.slice(0, capacity);
+  }
+
+  /**
+   * PRD Addendum Section 13-17: Sanitizes and repairs level-specific loadouts.
+   */
+  public sanitizeLevelLoadouts(
+    raw: any,
+    baseLevel: number,
+    owned: string[]
+  ): Record<number, string[]> {
+    const result: Record<number, string[]> = {};
+    const cap = BALANCE_CONFIG.baseStats.defenderCapacity[baseLevel] || 6;
+    const ownedSet = new Set(owned);
+
+    for (let lvl = 1; lvl <= 10; lvl++) {
+      const arr = raw && Array.isArray(raw[lvl]) ? raw[lvl] : DEFAULT_LEVEL_LOADOUTS[lvl];
+      const valid = Array.isArray(arr) ? arr.filter((id: string) => ownedSet.has(id)) : [];
+      if (valid.length > 0) {
+        result[lvl] = Array.from(new Set(valid)).slice(0, cap);
+      } else {
+        result[lvl] = owned.slice(0, Math.min(3, cap));
+      }
+    }
+    return result;
   }
 
   public save(): void {
@@ -647,6 +700,91 @@ class ProgressionManager {
 
   public updateSquad(heroIds: string[], mode: 'single' | 'coop' = 'single'): boolean {
     return this.setSquad(mode, heroIds);
+  }
+
+  /**
+   * PRD Addendum Section 13-17: Gets distinct hero loadout strictly for specific level.
+   * Level 1 loadout does NOT overwrite or share with Level 2, 3, etc.!
+   */
+  public getLevelLoadout(levelId: number): string[] {
+    const validLevel = Math.max(1, Math.min(10, levelId));
+    const cap = this.getBaseCapacity();
+    const existing = this.progress.levelLoadouts?.[validLevel];
+    if (Array.isArray(existing) && existing.length > 0) {
+      const valid = existing.filter((id) => this.progress.ownedHeroes.includes(id));
+      if (valid.length > 0) {
+        return Array.from(new Set(valid)).slice(0, cap);
+      }
+    }
+    // Fallback if not configured: smart default from owned heroes
+    const fallback = this.progress.ownedHeroes.slice(0, Math.min(3, cap));
+    if (!this.progress.levelLoadouts) this.progress.levelLoadouts = {};
+    this.progress.levelLoadouts[validLevel] = fallback;
+    this.save();
+    return fallback;
+  }
+
+  /**
+   * PRD Addendum Section 13-17: Updates hero loadout strictly for specific level.
+   */
+  public setLevelLoadout(levelId: number, heroIds: string[]): boolean {
+    const validLevel = Math.max(1, Math.min(10, levelId));
+    const cap = this.getBaseCapacity();
+    const unique = Array.from(new Set(heroIds)).filter((id) => this.progress.ownedHeroes.includes(id));
+    if (unique.length === 0) return false;
+    const sanitized = unique.slice(0, cap);
+    if (!this.progress.levelLoadouts) this.progress.levelLoadouts = {};
+    this.progress.levelLoadouts[validLevel] = sanitized;
+    // Also sync active singlePlayerSquad
+    this.progress.singlePlayerSquad = sanitized;
+    this.save();
+    return true;
+  }
+
+  /**
+   * PRD Addendum Section 8-11: Owned Heroes Collection
+   */
+  public getOwnedHeroes(): string[] {
+    return [...this.progress.ownedHeroes];
+  }
+
+  public isHeroOwned(heroId: string): boolean {
+    return this.progress.ownedHeroes.includes(heroId);
+  }
+
+  /**
+   * PRD Addendum Section 8-10: Hero Shop Purchase Flow
+   */
+  public buyHero(
+    heroId: string,
+    currency: 'gold' | 'crystals',
+    cost: number
+  ): { success: boolean; message: string } {
+    if (!ALL_20_HERO_IDS.includes(heroId)) {
+      return { success: false, message: 'Hero tidak valid.' };
+    }
+    if (this.isHeroOwned(heroId)) {
+      return { success: false, message: `${heroId} sudah dimiliki!` };
+    }
+
+    if (currency === 'gold') {
+      if (this.progress.gold < cost) {
+        return { success: false, message: `Gold tidak mencukupi (Butuh ${cost}G, punya ${this.progress.gold}G).` };
+      }
+      this.progress.gold -= cost;
+    } else {
+      if (this.progress.crystals < cost) {
+        return { success: false, message: `Kristal tidak mencukupi (Butuh ${cost} Kristal, punya ${this.progress.crystals}).` };
+      }
+      this.progress.crystals -= cost;
+    }
+
+    this.progress.ownedHeroes.push(heroId);
+    if (!this.progress.unlockedHeroes.includes(heroId)) {
+      this.progress.unlockedHeroes.push(heroId);
+    }
+    this.save();
+    return { success: true, message: `Selamat! ${heroId} berhasil dibuka dan ditambahkan ke Koleksi Hero!` };
   }
 
   /**

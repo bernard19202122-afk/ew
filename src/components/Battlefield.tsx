@@ -40,6 +40,8 @@ import {
   MapPin,
   Lock,
   Star,
+  Award,
+  Trophy,
 } from 'lucide-react';
 import { GameSimulation } from '../game/engine/gameSimulation';
 import { HeroInstance, TacticalSlot, Element } from '../game/types/gameTypes';
@@ -191,6 +193,9 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
   const [showLegend, setShowLegend] = useState<boolean>(true);
   const [showDPSMeter, setShowDPSMeter] = useState<boolean>(false);
   const [isTargetingOrbital, setIsTargetingOrbital] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<'3D' | '2D'>('3D');
+  const [projectedPads, setProjectedPads] = useState<Record<number, { x: number; y: number }>>({});
+  const [projectedNexus, setProjectedNexus] = useState<{ x: number; y: number } | null>(null);
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -315,65 +320,59 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
 
   return (
     <div className="w-full flex flex-col gap-3">
-      {/* Outer Tactical Command Console Bezel */}
+      {/* Outer Fantasy Living Forest Sanctum Frame */}
       <div
-        className="w-full bg-[#0a141a] border-4 border-[#1b323d] rounded-3xl p-3 sm:p-5 shadow-[0_0_50px_rgba(4,24,30,0.8)] relative overflow-hidden transition-transform"
+        className="w-full bg-[#0d1c18] border-4 border-[#1e4436] rounded-3xl p-3 sm:p-5 shadow-[0_0_50px_rgba(4,24,18,0.85)] relative overflow-hidden transition-transform"
         style={{
           transform: sim.screenShakeTimer > 0 ? `translate(${shakeX}px, ${shakeY}px)` : undefined,
         }}
       >
-        {/* Terminal Corner Screws */}
-        <div className="absolute top-2 left-2 w-2.5 h-2.5 rounded-full bg-[#1b323d] border border-[#2b4c5c] flex items-center justify-center">
-          <div className="w-1.5 h-0.5 bg-[#0a141a]" />
+        {/* Ancient Runic Corner Accents */}
+        <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center">
+          <div className="w-1 h-1 rounded-full bg-emerald-300 animate-pulse" />
         </div>
-        <div className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-[#1b323d] border border-[#2b4c5c] flex items-center justify-center">
-          <div className="w-1.5 h-0.5 bg-[#0a141a]" />
+        <div className="absolute top-2 right-2 w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center">
+          <div className="w-1 h-1 rounded-full bg-emerald-300 animate-pulse" />
         </div>
-        <div className="absolute bottom-2 left-2 w-2.5 h-2.5 rounded-full bg-[#1b323d] border border-[#2b4c5c] flex items-center justify-center">
-          <div className="w-1.5 h-0.5 bg-[#0a141a]" />
+        <div className="absolute bottom-2 left-2 w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center">
+          <div className="w-1 h-1 rounded-full bg-emerald-300 animate-pulse" />
         </div>
-        <div className="absolute bottom-2 right-2 w-2.5 h-2.5 rounded-full bg-[#1b323d] border border-[#2b4c5c] flex items-center justify-center">
-          <div className="w-1.5 h-0.5 bg-[#0a141a]" />
+        <div className="absolute bottom-2 right-2 w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center">
+          <div className="w-1 h-1 rounded-full bg-emerald-300 animate-pulse" />
         </div>
 
-        {/* Top Terminal Bar: PROJECT OVERGROWTH & SECTOR SWITCHER */}
+        {/* Top Header Bar: ELEMENTAL WILDGUARD & STAGE NAVIGATION */}
         <div className="w-full flex flex-col items-center justify-center mb-3">
-          <div className="relative px-6 sm:px-8 py-1.5 bg-[#0e2129] border-2 border-[#224856] rounded-xl shadow-lg flex items-center gap-3">
-            <div
-              className="w-2.5 h-2.5 rounded-full animate-pulse shadow-[0_0_8px_currentColor]"
-              style={{ color: currentSector.accent, backgroundColor: currentSector.accent }}
-            />
-            <h1 className="font-mono font-black tracking-[0.25em] text-cyan-300 text-sm sm:text-base uppercase drop-shadow">
-              PROJECT OVERGROWTH
+          <div className="relative px-6 sm:px-8 py-1.5 bg-gradient-to-r from-[#143226] via-[#1b4333] to-[#143226] border-2 border-emerald-500/60 rounded-2xl shadow-[0_0_25px_rgba(16,185,129,0.25)] flex items-center gap-3">
+            <span className="text-amber-400 text-sm">✨</span>
+            <h1 className="font-display font-black tracking-[0.2em] text-emerald-200 text-sm sm:text-base uppercase drop-shadow flex items-center gap-2">
+              <span>ELEMENTAL WILDGUARD</span>
+              <span className="text-xs text-amber-300/80 font-normal">· {currentSector.name}</span>
             </h1>
-            <div
-              className="w-2.5 h-2.5 rounded-full animate-pulse shadow-[0_0_8px_currentColor]"
-              style={{ color: currentSector.accent, backgroundColor: currentSector.accent }}
-            />
+            <span className="text-amber-400 text-sm">✨</span>
           </div>
 
           {/* Subtitle Telemetry Ribbon with Sector / Stage Selector */}
-          <div className="w-full max-w-4xl mt-2 px-3 py-1.5 bg-[#09171e]/90 border border-[#1a3845] rounded-xl flex flex-wrap items-center justify-between text-[11px] font-mono text-slate-300 gap-2">
+          <div className="w-full max-w-4xl mt-2 px-3 py-1.5 bg-[#0b1d17]/90 border border-emerald-900/60 rounded-xl flex flex-wrap items-center justify-between text-[11px] font-mono text-slate-300 gap-2">
             {/* Sector / Stage Switcher Buttons */}
-            <div className="flex items-center gap-1.5 bg-[#06141a] p-1 rounded-xl border border-[#1a3845]">
+            <div className="flex items-center gap-1.5 bg-[#071510] p-1 rounded-xl border border-emerald-900/80">
               <span className="text-[10px] text-amber-400 font-bold px-1 uppercase flex items-center gap-1">
                 <MapPin className="w-3 h-3 text-amber-400" /> STAGE:
               </span>
-              {(['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10'] as const).map((sId, idx) => {
-                const lvlNum = idx + 1;
+              {([1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const).map((lvlNum) => {
                 const isCurrent = sim.currentLevel === lvlNum;
                 const isUnlocked = progression.isLevelUnlocked(lvlNum);
                 const stars = progression.getStarsForLevel(lvlNum);
+                const lvlCfg = CAMPAIGN_LEVELS[lvlNum];
 
                 return (
                   <button
-                    key={sId}
+                    key={lvlNum}
                     onClick={() => {
                       sound.playClick();
-                      const sectorMapping: Record<string, any> = {
-                        S1: 'S1', S2: 'S1', S3: 'S2', S4: 'S2', S5: 'S3', S6: 'S3', S7: 'S4', S8: 'S4', S9: 'S5', S10: 'S5'
-                      };
-                      setSelectedSectorId(sectorMapping[sId] || 'S1');
+                      if (lvlCfg?.sectorId) {
+                        setSelectedSectorId(lvlCfg.sectorId);
+                      }
                       if (onOpenStageSelect) {
                         onOpenStageSelect(lvlNum);
                       } else if (onSelectLevel && isUnlocked) {
@@ -382,17 +381,17 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                     }}
                     className={`px-1.5 py-0.5 rounded-lg text-[9px] font-bold transition-all flex items-center gap-0.5 cursor-pointer ${
                       isCurrent
-                        ? 'bg-cyan-500 text-slate-950 font-black shadow-[0_0_10px_#06b6d4] ring-1 ring-white/50'
+                        ? 'bg-amber-400 text-slate-950 font-black shadow-[0_0_10px_#f59e0b] ring-1 ring-white/60'
                         : isUnlocked
-                        ? 'text-amber-300 hover:text-white bg-[#10242e] hover:bg-[#193a4a] border border-[#204557]'
+                        ? 'text-emerald-300 hover:text-white bg-[#102d22] hover:bg-[#184433] border border-emerald-700/50'
                         : 'text-slate-600 bg-slate-950/70 border border-slate-900'
                     }`}
                     title={
                       isCurrent
-                        ? `Stage ${lvlNum} (${sId}) - Sedang Aktif`
+                        ? `Stage ${lvlNum}: ${lvlCfg?.englishTitle || ''} (Aktif)`
                         : isUnlocked
-                        ? `Stage ${lvlNum} (${sId}) - Terbuka (${stars}/3 Bintang). Klik untuk info/mainkan`
-                        : `Stage ${lvlNum} (${sId}) - Terkunci. Selesaikan Stage ${lvlNum - 1} dahulu`
+                        ? `Stage ${lvlNum}: ${lvlCfg?.englishTitle || ''} (${stars}/3 Bintang)`
+                        : `Stage ${lvlNum}: Terkunci (Selesaikan Stage ${lvlNum - 1} dahulu)`
                     }
                   >
                     {!isUnlocked ? (
@@ -400,12 +399,12 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                     ) : stars > 0 ? (
                       <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
                     ) : null}
-                    <span>{sId}</span>
+                    <span>{lvlNum}</span>
                   </button>
                 );
               })}
-              <span className="text-white font-bold tracking-wider ml-1 hidden lg:inline">
-                {currentSector.name}
+              <span className="text-emerald-200 font-bold tracking-wider ml-1 hidden lg:inline text-[10px]">
+                {currentSector.sub}
               </span>
             </div>
 
@@ -418,10 +417,24 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                     onOpenStageSelect(sim.currentLevel);
                   }}
                   className="px-2.5 py-1 bg-gradient-to-r from-amber-500/25 via-orange-500/25 to-rose-500/25 hover:from-amber-500/40 hover:to-rose-500/40 border border-amber-500/50 hover:border-amber-400 rounded-lg text-amber-300 hover:text-white font-black text-[10px] flex items-center gap-1.5 transition-all shadow-md cursor-pointer transform hover:scale-105"
-                  title="Buka Menu Pemilihan Stage (Levels 1 hingga 5)"
+                  title="Buka Menu Pemilihan Stage (Levels 1 hingga 10)"
                 >
                   <MapPin className="w-3.5 h-3.5 text-amber-400" />
                   <span>PILIH STAGE (1–10)</span>
+                </button>
+              )}
+
+              {onExitBattleToLobby && (
+                <button
+                  onClick={() => {
+                    sound.playClick();
+                    onExitBattleToLobby();
+                  }}
+                  className="px-2.5 py-1 bg-[#102d22] hover:bg-[#184433] text-emerald-300 hover:text-white border border-emerald-600/60 hover:border-emerald-400 rounded-lg font-bold text-[10px] flex items-center gap-1.5 transition-all shadow cursor-pointer transform hover:scale-105"
+                  title="Keluar dari pertarungan & kembali ke Lobby Utama"
+                >
+                  <span>🏛️</span>
+                  <span>KEMBALI KE LOBBY</span>
                 </button>
               )}
 
@@ -515,7 +528,7 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
         </div>
 
         {/* ============================================================== */}
-        {/* INTERACTIVE COMMAND MAP VIEWPORT (CANVAS) */}
+        {/* INTERACTIVE COMMAND MAP VIEWPORT (3D Living World / 2D Radar) */}
         {/* ============================================================== */}
         <div
           ref={canvasRef}
@@ -524,20 +537,46 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
             isTargetingOrbital ? 'cursor-crosshair ring-2 ring-rose-500' : ''
           }`}
         >
-          {/* Tactical Background Map Image dynamically responsive to Sector */}
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-55 pointer-events-none transition-all duration-700"
-            style={{ backgroundImage: `url(${currentSector.bgImage})` }}
-          />
+          {/* 3D LIVING FANTASY WORLD (Primary View: Stylized 3D Animated Cohesive with Lobby) */}
+          {viewMode === '3D' && (
+            <div className="absolute inset-0 z-0">
+              <Battlefield3D
+                sim={sim}
+                selectedHero={selectedHero}
+                onSelectHero={onSelectHero}
+                onSelectSlotToDeploy={triggerDeploySlot}
+                onDeploySlot={triggerDeploySlot}
+                onPadsProjected={setProjectedPads}
+                onNexusProjected={setProjectedNexus}
+                isTargetingOrbital={isTargetingOrbital}
+                onOrbitalStrikeTarget={(tileX, tileY) => {
+                  sim.useOrbitalStrike(tileX, tileY);
+                  setIsTargetingOrbital(false);
+                }}
+                selectedSectorId={selectedSectorId}
+              />
+            </div>
+          )}
 
-          {/* Sci-Fi Grid Overlay & Scanlines */}
-          <div
-            className="absolute inset-0 opacity-20 pointer-events-none"
-            style={{
-              backgroundImage: `linear-gradient(to right, ${currentSector.accent} 1px, transparent 1px), linear-gradient(to bottom, ${currentSector.accent} 1px, transparent 1px)`,
-              backgroundSize: `${100 / 12}% ${100 / 8}%`,
-            }}
-          />
+          {/* 2D TACTICAL RADAR BACKGROUND (Alternative View) */}
+          {viewMode === '2D' && (
+            <>
+              {/* Tactical Background Map Image dynamically responsive to Sector */}
+              <div
+                className="absolute inset-0 bg-cover bg-center opacity-55 pointer-events-none transition-all duration-700"
+                style={{ backgroundImage: `url(${currentSector.bgImage})` }}
+              />
+
+              {/* Sci-Fi Grid Overlay & Scanlines */}
+              <div
+                className="absolute inset-0 opacity-20 pointer-events-none"
+                style={{
+                  backgroundImage: `linear-gradient(to right, ${currentSector.accent} 1px, transparent 1px), linear-gradient(to bottom, ${currentSector.accent} 1px, transparent 1px)`,
+                  backgroundSize: `${100 / 12}% ${100 / 8}%`,
+                }}
+              />
+            </>
+          )}
 
           {/* Sector-specific Atmospheric Gradient */}
           <div className={`absolute inset-0 bg-gradient-to-tr ${currentSector.ambientGrad} pointer-events-none`} />
@@ -597,79 +636,83 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
               </linearGradient>
             </defs>
 
-            {/* Highway Bridge Surface (Jalan Jembatan Beton) */}
-            <polyline
-              fill="none"
-              stroke="url(#bridgeGrad)"
-              strokeWidth="48"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              points={LANE_PATHS[0].map((p) => `${((p.x + 0.5) / 12) * 100}%,${((p.y + 0.5) / 8) * 100}%`).join(' ')}
-            />
-            <polyline
-              fill="none"
-              stroke="url(#bridgeGrad)"
-              strokeWidth="48"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              points={LANE_PATHS[1].map((p) => `${((p.x + 0.5) / 12) * 100}%,${((p.y + 0.5) / 8) * 100}%`).join(' ')}
-            />
+            {/* Highway Bridge Surface, Curbs & Conduits (2D Tactical Radar Mode only) */}
+            {viewMode === '2D' && (
+              <>
+                <polyline
+                  fill="none"
+                  stroke="url(#bridgeGrad)"
+                  strokeWidth="48"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  points={LANE_PATHS[0].map((p) => `${((p.x + 0.5) / 12) * 100}%,${((p.y + 0.5) / 8) * 100}%`).join(' ')}
+                />
+                <polyline
+                  fill="none"
+                  stroke="url(#bridgeGrad)"
+                  strokeWidth="48"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  points={LANE_PATHS[1].map((p) => `${((p.x + 0.5) / 12) * 100}%,${((p.y + 0.5) / 8) * 100}%`).join(' ')}
+                />
 
-            {/* Bridge Curbs & Railings */}
-            <polyline
-              fill="none"
-              stroke={currentSector.roadCurbColor}
-              strokeWidth="52"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity="0.75"
-              points={LANE_PATHS[0].map((p) => `${((p.x + 0.5) / 12) * 100}%,${((p.y + 0.5) / 8) * 100}%`).join(' ')}
-            />
-            <polyline
-              fill="none"
-              stroke={currentSector.roadCurbColor}
-              strokeWidth="52"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity="0.75"
-              points={LANE_PATHS[1].map((p) => `${((p.x + 0.5) / 12) * 100}%,${((p.y + 0.5) / 8) * 100}%`).join(' ')}
-            />
+                {/* Bridge Curbs & Railings */}
+                <polyline
+                  fill="none"
+                  stroke={currentSector.roadCurbColor}
+                  strokeWidth="52"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity="0.75"
+                  points={LANE_PATHS[0].map((p) => `${((p.x + 0.5) / 12) * 100}%,${((p.y + 0.5) / 8) * 100}%`).join(' ')}
+                />
+                <polyline
+                  fill="none"
+                  stroke={currentSector.roadCurbColor}
+                  strokeWidth="52"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity="0.75"
+                  points={LANE_PATHS[1].map((p) => `${((p.x + 0.5) / 12) * 100}%,${((p.y + 0.5) / 8) * 100}%`).join(' ')}
+                />
 
-            {/* Dashed Enemy Paths */}
-            <polyline
-              fill="none"
-              stroke={currentSector.dashedLineColor}
-              strokeWidth="3.5"
-              strokeDasharray="9 6"
-              opacity="0.9"
-              points={LANE_PATHS[0].map((p) => `${((p.x + 0.5) / 12) * 100}%,${((p.y + 0.5) / 8) * 100}%`).join(' ')}
-            />
-            <polyline
-              fill="none"
-              stroke={currentSector.dashedLineColor}
-              strokeWidth="3.5"
-              strokeDasharray="9 6"
-              opacity="0.9"
-              points={LANE_PATHS[1].map((p) => `${((p.x + 0.5) / 12) * 100}%,${((p.y + 0.5) / 8) * 100}%`).join(' ')}
-            />
+                {/* Dashed Enemy Paths */}
+                <polyline
+                  fill="none"
+                  stroke={currentSector.dashedLineColor}
+                  strokeWidth="3.5"
+                  strokeDasharray="9 6"
+                  opacity="0.9"
+                  points={LANE_PATHS[0].map((p) => `${((p.x + 0.5) / 12) * 100}%,${((p.y + 0.5) / 8) * 100}%`).join(' ')}
+                />
+                <polyline
+                  fill="none"
+                  stroke={currentSector.dashedLineColor}
+                  strokeWidth="3.5"
+                  strokeDasharray="9 6"
+                  opacity="0.9"
+                  points={LANE_PATHS[1].map((p) => `${((p.x + 0.5) / 12) * 100}%,${((p.y + 0.5) / 8) * 100}%`).join(' ')}
+                />
 
-            {/* Glowing Root Conduit Lines from Base */}
-            <path
-              d="M 68% 45% Q 55% 55% 40% 50% T 20% 70%"
-              fill="none"
-              stroke={currentSector.rootConduitColor}
-              strokeWidth="3"
-              opacity="0.65"
-              strokeLinecap="round"
-            />
-            <path
-              d="M 68% 42% Q 58% 30% 45% 25% T 25% 15%"
-              fill="none"
-              stroke={currentSector.rootConduitColor}
-              strokeWidth="2.5"
-              opacity="0.65"
-              strokeLinecap="round"
-            />
+                {/* Glowing Root Conduit Lines from Base */}
+                <path
+                  d="M 68% 45% Q 55% 55% 40% 50% T 20% 70%"
+                  fill="none"
+                  stroke={currentSector.rootConduitColor}
+                  strokeWidth="3"
+                  opacity="0.65"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M 68% 42% Q 58% 30% 45% 25% T 25% 15%"
+                  fill="none"
+                  stroke={currentSector.rootConduitColor}
+                  strokeWidth="2.5"
+                  opacity="0.65"
+                  strokeLinecap="round"
+                />
+              </>
+            )}
 
             {/* ============================================================== */}
             {/* DYNAMIC ATTACK BEAMS (LASERS & MAGIC STREAKS) */}
@@ -723,136 +766,181 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
           </svg>
 
           {/* ============================================================== */}
-          {/* MAP LANDMARK LABELS */}
+          {/* MAP LANDMARK LABELS & ENEMY SPAWNS (2D Mode only) */}
           {/* ============================================================== */}
-          <div className="absolute top-[6%] left-[16%] pointer-events-none z-15 font-mono text-[9px] text-cyan-200/80 uppercase tracking-widest bg-[#0a1820]/80 px-2 py-0.5 rounded border border-cyan-800/50 shadow">
-            BARACKS & HANGARS
-          </div>
-
-          <div className="absolute top-[8%] left-[34%] pointer-events-none z-15 font-mono text-[9px] text-cyan-200/80 uppercase tracking-wider bg-[#0a1820]/80 px-2 py-0.5 rounded border border-cyan-800/50 shadow">
-            SUBMERGED DISTRICT
-          </div>
-
-          <div className="absolute top-[38%] left-[23%] pointer-events-none z-15 font-mono text-[9px] text-cyan-300 uppercase tracking-wider bg-[#0c242e]/85 px-2 py-0.5 rounded border border-cyan-600/60 shadow">
-            DROWNED MARKET ARCADE
-          </div>
-
-          <div className="absolute top-[52%] left-[42%] pointer-events-none z-15 font-mono text-[9px] text-amber-300 font-bold bg-[#1d1607]/90 px-2 py-0.5 rounded border border-amber-500/80 shadow flex items-center gap-1">
-            <span>⚙️ REPAIR BRIDGE</span>
-          </div>
-
-          <div className="absolute bottom-[20%] right-[14%] pointer-events-none z-15 font-mono text-[9px] text-emerald-300 uppercase bg-[#092419]/80 px-2 py-0.5 rounded border border-emerald-600/50 shadow">
-            BIO-LAB COMPLEX & SPORA INCUBATOR
-          </div>
-
-          {/* ============================================================== */}
-          {/* ENEMY SPAWNS (PINTU MASUK 1 & 2) */}
-          {/* ============================================================== */}
-          <div
-            style={{
-              left: '2%',
-              top: `${(1 / 8) * 100}%`,
-              width: `${(1 / 12) * 100}%`,
-              height: `${(1 / 8) * 100}%`,
-            }}
-            className="absolute z-20 flex flex-col items-center justify-center pointer-events-none"
-          >
-            <div className="relative flex flex-col items-center">
-              <div className="w-8 h-8 rounded-full bg-rose-950/90 border-2 border-rose-500 flex items-center justify-center shadow-lg shadow-rose-950 animate-pulse">
-                <Skull className="w-4 h-4 text-rose-300" />
+          {viewMode === '2D' && (
+            <>
+              <div className="absolute top-[6%] left-[16%] pointer-events-none z-15 font-mono text-[9px] text-cyan-200/80 uppercase tracking-widest bg-[#0a1820]/80 px-2 py-0.5 rounded border border-cyan-800/50 shadow">
+                BARACKS & HANGARS
               </div>
-              <div className="mt-1 px-1.5 py-0.2 bg-rose-950 text-rose-200 text-[8px] font-mono font-bold uppercase rounded border border-rose-500/80 whitespace-nowrap shadow">
-                ENEMY SPAWN 1
-              </div>
-            </div>
-          </div>
 
-          <div
-            style={{
-              left: '2%',
-              top: `${(6 / 8) * 100}%`,
-              width: `${(1 / 12) * 100}%`,
-              height: `${(1 / 8) * 100}%`,
-            }}
-            className="absolute z-20 flex flex-col items-center justify-center pointer-events-none"
-          >
-            <div className="relative flex flex-col items-center">
-              <div className="w-8 h-8 rounded-full bg-rose-950/90 border-2 border-rose-500 flex items-center justify-center shadow-lg shadow-rose-950 animate-pulse">
-                <Skull className="w-4 h-4 text-rose-300" />
+              <div className="absolute top-[8%] left-[34%] pointer-events-none z-15 font-mono text-[9px] text-cyan-200/80 uppercase tracking-wider bg-[#0a1820]/80 px-2 py-0.5 rounded border border-cyan-800/50 shadow">
+                SUBMERGED DISTRICT
               </div>
-              <div className="mt-1 px-1.5 py-0.2 bg-rose-950 text-rose-200 text-[8px] font-mono font-bold uppercase rounded border border-rose-500/80 whitespace-nowrap shadow">
-                ENEMY SPAWN 2A
-              </div>
-            </div>
-          </div>
 
-          {/* ============================================================== */}
-          {/* CENTRAL BIO-NEXUS / PLAYER BASE (BASE BUAT MUSUH SERANG) */}
-          {/* ============================================================== */}
-          <div
-            style={{
-              left: `${(10.2 / 12) * 100}%`,
-              top: `${(2.6 / 8) * 100}%`,
-              width: `${(1.7 / 12) * 100}%`,
-              height: `${(2.8 / 8) * 100}%`,
-            }}
-            className="absolute z-25 flex flex-col items-center justify-center pointer-events-none"
-          >
-            {/* Health Meter Above Core */}
-            <div className="flex flex-col items-center gap-0.5 mb-1">
-              <div className="px-2 py-0.5 bg-[#051a22] text-cyan-300 text-[9px] font-mono font-bold uppercase rounded border border-cyan-400 shadow flex items-center gap-1">
-                <Activity className="w-3 h-3 text-emerald-400 animate-pulse" />
-                <span>NEXUS: {sim.baseHP}%</span>
+              <div className="absolute top-[38%] left-[23%] pointer-events-none z-15 font-mono text-[9px] text-cyan-300 uppercase tracking-wider bg-[#0c242e]/85 px-2 py-0.5 rounded border border-cyan-600/60 shadow">
+                DROWNED MARKET ARCADE
               </div>
-              <div className="w-20 h-2 bg-[#091b24] rounded-full overflow-hidden border border-cyan-600/60 shadow">
-                <div
-                  className={`h-full transition-all duration-300 ${
-                    sim.baseHP > 50
-                      ? 'bg-gradient-to-r from-emerald-400 to-cyan-400'
-                      : sim.baseHP > 25
-                      ? 'bg-gradient-to-r from-amber-400 to-amber-500'
-                      : 'bg-gradient-to-r from-rose-500 to-red-600 animate-pulse'
-                  }`}
-                  style={{ width: `${Math.max(0, sim.baseHP)}%` }}
-                />
-              </div>
-            </div>
 
-            {/* Glowing Bio-Core Roots & Core Sphere */}
-            <div className="relative w-20 h-20 flex items-center justify-center">
+              <div className="absolute top-[52%] left-[42%] pointer-events-none z-15 font-mono text-[9px] text-amber-300 font-bold bg-[#1d1607]/90 px-2 py-0.5 rounded border border-amber-500/80 shadow flex items-center gap-1">
+                <span>⚙️ REPAIR BRIDGE</span>
+              </div>
+
+              <div className="absolute bottom-[20%] right-[14%] pointer-events-none z-15 font-mono text-[9px] text-emerald-300 uppercase bg-[#092419]/80 px-2 py-0.5 rounded border border-emerald-600/50 shadow">
+                BIO-LAB COMPLEX & SPORA INCUBATOR
+              </div>
+
+              {/* ENEMY SPAWNS (PINTU MASUK 1 & 2) */}
               <div
-                className="absolute inset-0 rounded-full blur-xl animate-ping opacity-30"
-                style={{ backgroundColor: currentSector.nexusThemeColor }}
-              />
-              <div
-                className="absolute inset-2 rounded-full border-2 animate-spin opacity-80"
-                style={{ borderColor: currentSector.nexusThemeColor }}
-              />
-
-              <div
-                className="relative w-14 h-14 rounded-2xl border-2 shadow-2xl flex flex-col items-center justify-center"
                 style={{
-                  backgroundColor: '#061d19',
-                  borderColor: currentSector.nexusThemeColor,
-                  boxShadow: `0 0 25px ${currentSector.nexusThemeColor}`,
+                  left: '2%',
+                  top: `${(1 / 8) * 100}%`,
+                  width: `${(1 / 12) * 100}%`,
+                  height: `${(1 / 8) * 100}%`,
                 }}
+                className="absolute z-20 flex flex-col items-center justify-center pointer-events-none"
               >
-                <div
-                  className="w-6 h-6 rounded-full blur-[1px] animate-pulse flex items-center justify-center"
-                  style={{ backgroundColor: currentSector.nexusThemeColor }}
-                >
-                  <div className="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_#ffffff]" />
+                <div className="relative flex flex-col items-center">
+                  <div className="w-8 h-8 rounded-full bg-rose-950/90 border-2 border-rose-500 flex items-center justify-center shadow-lg shadow-rose-950 animate-pulse">
+                    <Skull className="w-4 h-4 text-rose-300" />
+                  </div>
+                  <div className="mt-1 px-1.5 py-0.2 bg-rose-950 text-rose-200 text-[8px] font-mono font-bold uppercase rounded border border-rose-500/80 whitespace-nowrap shadow">
+                    ENEMY SPAWN 1
+                  </div>
                 </div>
-                <span className="text-[7px] font-mono font-extrabold text-white tracking-tighter uppercase mt-0.5">
-                  CORE
-                </span>
               </div>
-            </div>
 
-            <div className="mt-1 px-2 py-0.5 bg-[#07241c] text-emerald-300 text-[8px] font-mono font-bold uppercase rounded border border-emerald-500/80 shadow">
-              {currentSector.nexusName}
-            </div>
-          </div>
+              <div
+                style={{
+                  left: '2%',
+                  top: `${(6 / 8) * 100}%`,
+                  width: `${(1 / 12) * 100}%`,
+                  height: `${(1 / 8) * 100}%`,
+                }}
+                className="absolute z-20 flex flex-col items-center justify-center pointer-events-none"
+              >
+                <div className="relative flex flex-col items-center">
+                  <div className="w-8 h-8 rounded-full bg-rose-950/90 border-2 border-rose-500 flex items-center justify-center shadow-lg shadow-rose-950 animate-pulse">
+                    <Skull className="w-4 h-4 text-rose-300" />
+                  </div>
+                  <div className="mt-1 px-1.5 py-0.2 bg-rose-950 text-rose-200 text-[8px] font-mono font-bold uppercase rounded border border-rose-500/80 whitespace-nowrap shadow">
+                    ENEMY SPAWN 2A
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* ============================================================== */}
+          {/* CENTRAL BIO-NEXUS / PLAYER BASE */}
+          {/* ============================================================== */}
+          {(() => {
+            const nexusPos =
+              viewMode === '3D' && projectedNexus
+                ? {
+                    left: `${Math.min(92, Math.max(8, projectedNexus.x))}%`,
+                    top: `${Math.min(84, Math.max(12, projectedNexus.y))}%`,
+                    transform: 'translate(-50%, -100%)',
+                  }
+                : {
+                    left: `${(10.5 / 12) * 100}%`,
+                    top: `${(3.5 / 8) * 100}%`,
+                    transform: 'translate(-50%, -50%)',
+                  };
+
+            return (
+              <div
+                style={{
+                  left: nexusPos.left,
+                  top: nexusPos.top,
+                  transform: nexusPos.transform,
+                  maxWidth: '120px',
+                }}
+                className="absolute z-25 flex flex-col items-center justify-center pointer-events-none select-none"
+              >
+                {/* Health Meter Above Core */}
+                <div className="flex flex-col items-center gap-0.5 mb-1 w-full">
+                  <div
+                    className={`px-2 py-0.5 text-[9px] font-mono font-bold uppercase rounded border shadow flex items-center gap-1 whitespace-nowrap ${
+                      sim.baseHP <= 25
+                        ? 'bg-rose-950/95 text-rose-300 border-rose-500 animate-pulse ring-1 ring-rose-500'
+                        : sim.baseHP <= 50
+                        ? 'bg-amber-950/95 text-amber-300 border-amber-500'
+                        : 'bg-[#051a22]/95 text-cyan-300 border-cyan-400'
+                    }`}
+                  >
+                    <Activity
+                      className={`w-3 h-3 ${
+                        sim.baseHP <= 25
+                          ? 'text-rose-400 animate-bounce'
+                          : sim.baseHP <= 50
+                          ? 'text-amber-400 animate-pulse'
+                          : 'text-emerald-400 animate-pulse'
+                      }`}
+                    />
+                    <span>NEXUS: {sim.baseHP}%</span>
+                  </div>
+                  <div className="w-20 h-2 bg-[#091b24] rounded-full overflow-hidden border border-cyan-600/60 shadow">
+                    <div
+                      className={`h-full transition-all duration-300 ${
+                        sim.baseHP > 50
+                          ? 'bg-gradient-to-r from-emerald-400 to-cyan-400'
+                          : sim.baseHP > 25
+                          ? 'bg-gradient-to-r from-amber-400 to-amber-500'
+                          : 'bg-gradient-to-r from-rose-500 to-red-600 animate-pulse'
+                      }`}
+                      style={{ width: `${Math.max(0, Math.min(100, sim.baseHP))}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Glowing Bio-Core Roots & Core Sphere (2D mode only; rendered as 3D Citadel Bastion in 3D mode) */}
+                {viewMode === '2D' && (
+                  <>
+                    <div className="relative w-16 h-16 flex items-center justify-center">
+                      <div
+                        className="absolute inset-0 rounded-full blur-xl animate-ping opacity-30"
+                        style={{ backgroundColor: currentSector.nexusThemeColor }}
+                      />
+                      <div
+                        className="absolute inset-1 rounded-full border-2 animate-spin opacity-80"
+                        style={{ borderColor: currentSector.nexusThemeColor }}
+                      />
+
+                      <div
+                        className="relative w-12 h-12 rounded-xl border-2 shadow-2xl flex flex-col items-center justify-center"
+                        style={{
+                          backgroundColor: '#061d19',
+                          borderColor: currentSector.nexusThemeColor,
+                          boxShadow: `0 0 20px ${currentSector.nexusThemeColor}`,
+                        }}
+                      >
+                        <div
+                          className="w-5 h-5 rounded-full blur-[1px] animate-pulse flex items-center justify-center"
+                          style={{ backgroundColor: currentSector.nexusThemeColor }}
+                        >
+                          <div className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_8px_#ffffff]" />
+                        </div>
+                        <span className="text-[7px] font-mono font-extrabold text-white tracking-tighter uppercase mt-0.5">
+                          CORE
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-1 px-1.5 py-0.5 bg-[#07241c] text-emerald-300 text-[8px] font-mono font-bold uppercase rounded border border-emerald-500/80 shadow max-w-[110px] truncate text-center">
+                      {currentSector.nexusName}
+                    </div>
+                  </>
+                )}
+
+                {viewMode === '3D' && (
+                  <div className="px-1.5 py-0.2 bg-[#07241c]/90 text-emerald-300 text-[7.5px] font-mono font-bold uppercase rounded border border-emerald-500/60 shadow max-w-[110px] truncate text-center">
+                    {currentSector.nexusName}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* ============================================================== */}
           {/* TOWER PLOT ZONES (WITH IN-PLACE UPGRADE & ULT CONTROLS) */}
@@ -860,10 +948,17 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
           {sim.tacticalSlots.map((slot) => {
             const hero = sim.heroes.find((h) => h.slotIndex === slot.slotIndex);
             const isSelected = selectedHero?.slotIndex === slot.slotIndex;
-            const leftPct = (slot.tileX / GRID_WIDTH) * 100;
-            const topPct = (slot.tileY / GRID_HEIGHT) * 100;
-            const widthPct = (1 / GRID_WIDTH) * 100;
-            const heightPct = (1 / GRID_HEIGHT) * 100;
+
+            // Single Source of Truth screen coordinate calculation
+            // In 3D mode: uses exact camera-projected position stream (0px offset error)
+            // In 2D mode: uses exact center anchor ((tileX + 0.5)/GRID_WIDTH * 100%)
+            const padCenter =
+              viewMode === '3D' && projectedPads[slot.slotIndex]
+                ? projectedPads[slot.slotIndex]
+                : {
+                    x: ((slot.tileX + 0.5) / GRID_WIDTH) * 100,
+                    y: ((slot.tileY + 0.5) / GRID_HEIGHT) * 100,
+                  };
 
             const elementBorder =
               slot.terrainBonus === 'Fire'
@@ -892,10 +987,11 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                 onMouseEnter={() => hero && setHoveredHero(hero)}
                 onMouseLeave={() => setHoveredHero(null)}
                 style={{
-                  left: `${leftPct}%`,
-                  top: `${topPct}%`,
-                  width: `${widthPct}%`,
-                  height: `${heightPct}%`,
+                  left: `${padCenter.x}%`,
+                  top: `${padCenter.y}%`,
+                  transform: 'translate(-50%, -50%)',
+                  width: viewMode === '3D' ? '68px' : `${(1 / GRID_WIDTH) * 100}%`,
+                  height: viewMode === '3D' ? '68px' : `${(1 / GRID_HEIGHT) * 100}%`,
                 }}
                 className={`absolute cursor-pointer flex items-center justify-center transition-all p-1 z-25 ${
                   isSelected ? 'scale-105 z-35' : 'hover:scale-105'
@@ -903,28 +999,38 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
               >
                 {/* Outlined Tactical Tower Plot Zone Platform */}
                 <div
-                  className={`relative w-full h-full rounded-xl flex flex-col items-center justify-center border-2 transition-all ${
-                    isSelected
-                      ? 'border-amber-400 bg-[#162730] shadow-[0_0_15px_#f59e0b] ring-2 ring-amber-400/50'
+                  className={`relative w-full h-full rounded-2xl flex flex-col items-center justify-center transition-all ${
+                    viewMode === '3D'
+                      ? isSelected
+                        ? 'ring-2 ring-amber-400 bg-amber-400/10 shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                        : hero
+                        ? 'hover:ring-1 hover:ring-emerald-400/40 bg-transparent'
+                        : `border border-dashed border-emerald-500/30 hover:border-emerald-400/80 hover:bg-emerald-500/10`
+                      : isSelected
+                      ? 'border-2 border-amber-400 bg-[#162730] shadow-[0_0_15px_#f59e0b] ring-2 ring-amber-400/50'
                       : hero
                       ? 'border-[#2a5569] bg-[#0c1e26]/90 shadow-lg'
                       : `border-dashed bg-[#091b22]/70 hover:bg-[#112d38] ${elementBorder}`
                   }`}
                 >
-                  {/* Plot Corner Brackets */}
-                  <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 border-t-2 border-l-2 border-cyan-400" />
-                  <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 border-t-2 border-r-2 border-cyan-400" />
-                  <div className="absolute bottom-0.5 left-0.5 w-1.5 h-1.5 border-b-2 border-l-2 border-cyan-400" />
-                  <div className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 border-b-2 border-r-2 border-cyan-400" />
+                  {/* Plot Corner Brackets (2D radar mode only) */}
+                  {viewMode === '2D' && (
+                    <>
+                      <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 border-t-2 border-l-2 border-cyan-400" />
+                      <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 border-t-2 border-r-2 border-cyan-400" />
+                      <div className="absolute bottom-0.5 left-0.5 w-1.5 h-1.5 border-b-2 border-l-2 border-cyan-400" />
+                      <div className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 border-b-2 border-r-2 border-cyan-400" />
 
-                  {/* Header Plot Tag */}
-                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.2 bg-[#06141a] border border-[#1e4859] rounded text-[7px] font-mono font-bold text-cyan-300 uppercase whitespace-nowrap shadow z-20">
-                    PLOT {slot.slotIndex + 1}
-                  </div>
+                      {/* Header Plot Tag */}
+                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.2 bg-[#06141a] border border-[#1e4859] rounded text-[7px] font-mono font-bold text-cyan-300 uppercase whitespace-nowrap shadow z-20">
+                        PLOT {slot.slotIndex + 1}
+                      </div>
+                    </>
+                  )}
 
                   {hero ? (
                     /* Hero Champion Positioned On This Tower Plot */
-                    <div className="relative flex flex-col items-center justify-center w-full h-full pt-1">
+                    <div className="relative flex flex-col items-center justify-center w-full h-full pt-1 pointer-events-auto">
                       {/* Owner Badge (Co-op) */}
                       {sim.playerMode === 'coop' && hero.ownerPlayerId && (
                         <span className={`absolute -top-1 -left-1 px-1 text-[8px] font-mono font-bold rounded z-30 shadow border ${
@@ -937,7 +1043,7 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                       )}
 
                       {/* Level and Star Badge */}
-                      <span className="absolute -top-1 -right-1 px-1 text-[8px] font-mono font-bold bg-[#06141a] text-amber-300 border border-amber-500/50 rounded z-30 shadow flex items-center gap-0.5">
+                      <span className="absolute -top-1 -right-1 px-1 text-[8px] font-mono font-bold bg-[#071913]/90 text-amber-300 border border-amber-500/50 rounded z-30 shadow flex items-center gap-0.5">
                         Lv.{hero.level}{hero.starLevel > 1 ? ` ★${hero.starLevel}` : ''}
                       </span>
 
@@ -951,9 +1057,9 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                             }
                           }}
                           disabled={!canAffordUpgrade}
-                          className={`absolute -bottom-3.5 left-1/2 -translate-x-1/2 z-40 px-1.5 py-0.2 rounded text-[7px] font-mono font-bold shadow-md whitespace-nowrap transition-transform hover:scale-110 flex items-center gap-0.5 ${
+                          className={`absolute -bottom-3.5 left-1/2 -translate-x-1/2 z-40 px-1.5 py-0.2 rounded text-[7px] font-mono font-bold shadow-md whitespace-nowrap transition-transform hover:scale-110 flex items-center gap-0.5 cursor-pointer ${
                             canAffordUpgrade
-                              ? 'bg-amber-500 text-slate-950 border border-yellow-200'
+                              ? 'bg-amber-400 text-slate-950 border border-yellow-200'
                               : 'bg-slate-800 text-slate-400 border border-slate-700'
                           }`}
                         >
@@ -969,33 +1075,36 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                             sound.playUltimate();
                             sim.castHeroUltimate(hero);
                           }}
-                          className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-40 px-1.5 py-0.2 bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-950 rounded text-[7px] font-mono font-black shadow-[0_0_8px_#f59e0b] border border-white animate-pulse whitespace-nowrap"
+                          className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-40 px-1.5 py-0.2 bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-950 rounded text-[7px] font-mono font-black shadow-[0_0_8px_#f59e0b] border border-white animate-pulse whitespace-nowrap cursor-pointer"
                         >
                           ⚡ ULT READY
                         </button>
                       )}
 
-                      {/* Avatar with Ultimate Ring */}
-                      <div
-                        className={`transition-transform duration-75 relative ${
-                          ultReady ? 'ring-2 ring-amber-400 rounded-full shadow-[0_0_12px_#f59e0b]' : ''
-                        }`}
-                      >
-                        <HeroAvatar
-                          templateId={hero.templateId}
-                          element={hero.element}
-                          role={hero.role}
-                          isDead={hero.isDead}
-                          size={38}
-                        />
-                      </div>
-
-                      <span className="text-[8px] font-mono font-bold text-white mt-0.5 leading-none drop-shadow">
-                        {hero.name}
-                      </span>
+                      {/* Avatar with Ultimate Ring (2D Radar mode only; 3D mode renders live 3D model) */}
+                      {viewMode === '2D' && (
+                        <>
+                          <div
+                            className={`transition-transform duration-75 relative ${
+                              ultReady ? 'ring-2 ring-amber-400 rounded-full shadow-[0_0_12px_#f59e0b]' : ''
+                            }`}
+                          >
+                            <HeroAvatar
+                              templateId={hero.templateId}
+                              element={hero.element}
+                              role={hero.role}
+                              isDead={hero.isDead}
+                              size={38}
+                            />
+                          </div>
+                          <span className="text-[8px] font-mono font-bold text-white mt-0.5 leading-none drop-shadow">
+                            {hero.name}
+                          </span>
+                        </>
+                      )}
 
                       {/* Mini HP & Energy Bars */}
-                      <div className="w-4/5 flex flex-col gap-0.5 mt-0.5">
+                      <div className="w-4/5 flex flex-col gap-0.5 mt-auto mb-1">
                         <div className="w-full h-1 bg-[#06141a] rounded-full overflow-hidden border border-[#1b3d4d]">
                           <div
                             className="h-full bg-emerald-400"
@@ -1012,17 +1121,22 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                     </div>
                   ) : (
                     /* Vacant Grid Platform Prompt */
-                    <div className="flex flex-col items-center justify-center gap-0.5 pt-1 text-center">
-                      <div className="w-4 h-4 rounded border border-dashed border-current flex items-center justify-center opacity-80">
-                        <Plus className="w-3 h-3" />
+                    viewMode === '3D' ? (
+                      /* In 3D mode: transparent hit assist area allowing the 3D in-world +DEPLOY beacon to shine with 0px offset */
+                      <div className="w-full h-full rounded-full border border-dashed border-emerald-400/15 hover:border-emerald-400/80 hover:bg-emerald-500/10 transition-all flex items-center justify-center pointer-events-auto" />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-0.5 pt-1 text-center group">
+                        <div className="w-5 h-5 rounded-full border border-dashed border-emerald-400/60 bg-emerald-950/30 flex items-center justify-center text-emerald-300 group-hover:scale-110 transition-transform shadow-[0_0_8px_rgba(16,185,129,0.3)]">
+                          <Plus className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="text-[7px] font-mono font-bold uppercase tracking-wider text-emerald-300/80">
+                          +DEPLOY
+                        </span>
+                        <span className="text-[6px] font-mono text-amber-300 font-semibold">
+                          +{slot.terrainBonus}
+                        </span>
                       </div>
-                      <span className="text-[7px] font-mono font-bold uppercase tracking-tighter opacity-90">
-                        TOWER PLOT
-                      </span>
-                      <span className="text-[6px] font-mono text-cyan-300 font-semibold">
-                        +{slot.terrainBonus}
-                      </span>
-                    </div>
+                    )
                   )}
                 </div>
               </div>
@@ -1152,49 +1266,54 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                   )}
                 </div>
 
-                {/* Enemy Avatar Graphic */}
-                <EnemyAvatar
-                  templateId={enemy.templateId}
-                  element={enemy.element}
-                  enemyClass={enemy.enemyClass}
-                  size={
-                    enemy.enemyClass === 'Boss' || enemy.enemyClass === 'MapBoss'
-                      ? 46
-                      : enemy.enemyClass === 'MiniBoss'
-                      ? 40
-                      : enemy.enemyClass === 'Elite'
-                      ? 35
-                      : 28
-                  }
-                />
+                {/* Enemy Avatar Graphic (2D Mode only; in 3D mode the full 3D animated creature is rendered) */}
+                {viewMode === '2D' && (
+                  <EnemyAvatar
+                    templateId={enemy.templateId}
+                    element={enemy.element}
+                    enemyClass={enemy.enemyClass}
+                    size={
+                      enemy.enemyClass === 'Boss' || enemy.enemyClass === 'MapBoss'
+                        ? 46
+                        : enemy.enemyClass === 'MiniBoss'
+                        ? 40
+                        : enemy.enemyClass === 'Elite'
+                        ? 35
+                        : 28
+                    }
+                  />
+                )}
 
-                <span className="text-[7px] font-mono font-bold text-slate-200 mt-0.5 drop-shadow leading-none">
-                  {enemy.name.substring(0, 9)}
-                </span>
+                {viewMode === '2D' && (
+                  <span className="text-[7px] font-mono font-bold text-slate-200 mt-0.5 drop-shadow leading-none">
+                    {enemy.name.substring(0, 9)}
+                  </span>
+                )}
               </div>
             );
           })}
 
           {/* ============================================================== */}
-          {/* FLYING PROJECTILES */}
+          {/* FLYING PROJECTILES (2D Mode only; rendered in 3D in 3D mode) */}
           {/* ============================================================== */}
-          {sim.projectiles.map((p) => {
-            const leftPct = (p.x / GRID_WIDTH) * 100;
-            const topPct = (p.y / GRID_HEIGHT) * 100;
-            return (
-              <div
-                key={p.id}
-                style={{
-                  left: `${leftPct}%`,
-                  top: `${topPct}%`,
-                  transform: 'translate(-50%, -50%)',
-                  backgroundColor: getElementColor(p.element),
-                  boxShadow: `0 0 10px ${getElementColor(p.element)}`,
-                }}
-                className="absolute w-2.5 h-2.5 rounded-full pointer-events-none z-35 animate-ping"
-              />
-            );
-          })}
+          {viewMode === '2D' &&
+            sim.projectiles.map((p) => {
+              const leftPct = (p.x / GRID_WIDTH) * 100;
+              const topPct = (p.y / GRID_HEIGHT) * 100;
+              return (
+                <div
+                  key={p.id}
+                  style={{
+                    left: `${leftPct}%`,
+                    top: `${topPct}%`,
+                    transform: 'translate(-50%, -50%)',
+                    backgroundColor: getElementColor(p.element),
+                    boxShadow: `0 0 10px ${getElementColor(p.element)}`,
+                  }}
+                  className="absolute w-2.5 h-2.5 rounded-full pointer-events-none z-35 animate-ping"
+                />
+              );
+            })}
 
           {/* ============================================================== */}
           {/* FLOATING DAMAGE NUMBERS */}
@@ -1305,19 +1424,58 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
               )}
             </div>
           )}
+
+          {/* ============================================================== */}
+          {/* CINEMATIC BATTLE OVERLAY: KAMU KALAH / KAMU MENANG */}
+          {/* ============================================================== */}
+          {(sim.phase === 'LEVEL_DEFEAT' || sim.phase === 'LEVEL_VICTORY') && (
+            <div className="absolute inset-0 z-40 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center pointer-events-none select-none p-4 animate-in fade-in duration-300">
+              {sim.phase === 'LEVEL_DEFEAT' ? (
+                <div className="flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
+                  <div className="w-20 h-20 rounded-full bg-rose-950/90 border-2 border-rose-500 flex items-center justify-center shadow-[0_0_40px_#f43f5e] mb-3">
+                    <Skull className="w-12 h-12 text-rose-400 animate-pulse" />
+                  </div>
+                  <h1 className="text-4xl sm:text-6xl font-black font-display text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-rose-300 to-red-600 drop-shadow-[0_4px_20px_rgba(244,63,94,0.9)] tracking-wider">
+                    KAMU KALAH!
+                  </h1>
+                  <span className="text-sm sm:text-base font-mono font-bold text-rose-300 tracking-widest uppercase mt-2 px-4 py-1 rounded-full bg-rose-950/90 border border-rose-500/60 shadow-lg">
+                    DEFEAT · BASE TELAH HANCUR
+                  </span>
+                  <p className="text-xs text-slate-300 mt-2 font-mono">
+                    Command Core telah hancur! Membuka hasil pertandingan...
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
+                  <div className="w-20 h-20 rounded-full bg-amber-950/90 border-2 border-amber-400 flex items-center justify-center shadow-[0_0_40px_#f59e0b] mb-3">
+                    <Trophy className="w-12 h-12 text-amber-300 animate-bounce" />
+                  </div>
+                  <h1 className="text-4xl sm:text-6xl font-black font-display text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 drop-shadow-[0_4px_20px_rgba(245,158,11,0.9)] tracking-wider">
+                    KAMU MENANG!
+                  </h1>
+                  <span className="text-sm sm:text-base font-mono font-bold text-amber-300 tracking-widest uppercase mt-2 px-4 py-1 rounded-full bg-amber-950/90 border border-amber-500/60 shadow-lg">
+                    VICTORY · STAGE DISELESAIKAN
+                  </span>
+                  <p className="text-xs text-slate-300 mt-2 font-mono">
+                    Semua gelombang musuh berhasil ditaklukkan!
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ============================================================== */}
-        {/* COMMANDER TACTICAL SUPERPOWERS DOCK */}
+        {/* COMMANDER TACTICAL SUPERPOWERS DOCK (PRD v3.0 Section 21) */}
         {/* ============================================================== */}
-        <div className="mt-3 w-full bg-[#08151c] border-2 border-[#193947] rounded-2xl p-2.5 shadow-xl flex flex-wrap items-center justify-between gap-2.5 font-mono text-xs">
+        <div className="mt-3 w-full bg-[#0a1b15] border-2 border-emerald-900/70 rounded-2xl p-2.5 shadow-xl flex flex-wrap items-center justify-between gap-2.5 font-mono text-xs">
           <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 text-cyan-400 animate-pulse" />
-            <span className="font-bold text-white tracking-wider">COMMANDER PROTOCOLS:</span>
+            <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+            <span className="font-bold text-emerald-200 tracking-wider">KEMAMPUAN COMMANDER:</span>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Q: Orbital Strike */}
+            {/* Q: Meteor Strike */}
             <button
               onClick={() => {
                 if (sim.commanderCooldowns.orbitalStrike <= 0) {
@@ -1326,23 +1484,23 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                 }
               }}
               disabled={sim.commanderCooldowns.orbitalStrike > 0}
-              className={`px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all ${
+              className={`px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all cursor-pointer ${
                 sim.commanderCooldowns.orbitalStrike > 0
-                  ? 'bg-[#0a141a] border-slate-800 text-slate-600 cursor-not-allowed'
+                  ? 'bg-[#081510] border-slate-800 text-slate-600 cursor-not-allowed'
                   : isTargetingOrbital
                   ? 'bg-rose-600 text-white border-rose-400 shadow-[0_0_15px_#f43f5e] ring-2 ring-rose-400/50 scale-105'
-                  : 'bg-[#12232c] border-orange-500/60 hover:border-orange-400 text-orange-300 hover:bg-[#1a3340] shadow'
+                  : 'bg-[#152e22] border-orange-500/60 hover:border-orange-400 text-orange-300 hover:bg-[#1e4231] shadow'
               }`}
             >
-              <span className="px-1 py-0.2 bg-black/40 rounded text-[9px] font-bold text-slate-400">Q</span>
+              <span className="px-1 py-0.2 bg-black/40 rounded text-[9px] font-bold text-amber-300">Q</span>
               <Crosshair className="w-3.5 h-3.5 text-orange-400" />
-              <span className="font-bold text-[11px]">Orbital Strike</span>
+              <span className="font-bold text-[11px]">Meteor Strike</span>
               {sim.commanderCooldowns.orbitalStrike > 0 && (
                 <span className="text-[10px] text-slate-400">({sim.commanderCooldowns.orbitalStrike.toFixed(0)}s)</span>
               )}
             </button>
 
-            {/* W: Bio-Nexus Overdrive */}
+            {/* W: Living Barrier */}
             <button
               onClick={() => {
                 if (sim.commanderCooldowns.bioBarrier <= 0) {
@@ -1351,21 +1509,21 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                 }
               }}
               disabled={sim.commanderCooldowns.bioBarrier > 0}
-              className={`px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all ${
+              className={`px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all cursor-pointer ${
                 sim.commanderCooldowns.bioBarrier > 0
-                  ? 'bg-[#0a141a] border-slate-800 text-slate-600 cursor-not-allowed'
-                  : 'bg-[#12232c] border-emerald-500/60 hover:border-emerald-400 text-emerald-300 hover:bg-[#1a3340] shadow'
+                  ? 'bg-[#081510] border-slate-800 text-slate-600 cursor-not-allowed'
+                  : 'bg-[#152e22] border-emerald-500/60 hover:border-emerald-400 text-emerald-300 hover:bg-[#1e4231] shadow'
               }`}
             >
-              <span className="px-1 py-0.2 bg-black/40 rounded text-[9px] font-bold text-slate-400">W</span>
+              <span className="px-1 py-0.2 bg-black/40 rounded text-[9px] font-bold text-emerald-300">W</span>
               <Shield className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="font-bold text-[11px]">Core Overdrive</span>
+              <span className="font-bold text-[11px]">Living Barrier</span>
               {sim.commanderCooldowns.bioBarrier > 0 && (
                 <span className="text-[10px] text-slate-400">({sim.commanderCooldowns.bioBarrier.toFixed(0)}s)</span>
               )}
             </button>
 
-            {/* E: Cryo Freeze Wave */}
+            {/* E: Frost Nova */}
             <button
               onClick={() => {
                 if (sim.commanderCooldowns.cryoFreeze <= 0) {
@@ -1374,21 +1532,21 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                 }
               }}
               disabled={sim.commanderCooldowns.cryoFreeze > 0}
-              className={`px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all ${
+              className={`px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all cursor-pointer ${
                 sim.commanderCooldowns.cryoFreeze > 0
-                  ? 'bg-[#0a141a] border-slate-800 text-slate-600 cursor-not-allowed'
-                  : 'bg-[#12232c] border-cyan-500/60 hover:border-cyan-400 text-cyan-300 hover:bg-[#1a3340] shadow'
+                  ? 'bg-[#081510] border-slate-800 text-slate-600 cursor-not-allowed'
+                  : 'bg-[#152e22] border-cyan-500/60 hover:border-cyan-400 text-cyan-300 hover:bg-[#1e4231] shadow'
               }`}
             >
-              <span className="px-1 py-0.2 bg-black/40 rounded text-[9px] font-bold text-slate-400">E</span>
+              <span className="px-1 py-0.2 bg-black/40 rounded text-[9px] font-bold text-cyan-300">E</span>
               <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="font-bold text-[11px]">Cryo Blizzard</span>
+              <span className="font-bold text-[11px]">Frost Nova</span>
               {sim.commanderCooldowns.cryoFreeze > 0 && (
                 <span className="text-[10px] text-slate-400">({sim.commanderCooldowns.cryoFreeze.toFixed(0)}s)</span>
               )}
             </button>
 
-            {/* R: Gold Drones */}
+            {/* R: Nature Harvest */}
             <button
               onClick={() => {
                 if (sim.commanderCooldowns.droneHarvest <= 0) {
@@ -1397,21 +1555,21 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                 }
               }}
               disabled={sim.commanderCooldowns.droneHarvest > 0}
-              className={`px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all ${
+              className={`px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all cursor-pointer ${
                 sim.commanderCooldowns.droneHarvest > 0
-                  ? 'bg-[#0a141a] border-slate-800 text-slate-600 cursor-not-allowed'
-                  : 'bg-[#12232c] border-yellow-500/60 hover:border-yellow-400 text-yellow-300 hover:bg-[#1a3340] shadow'
+                  ? 'bg-[#081510] border-slate-800 text-slate-600 cursor-not-allowed'
+                  : 'bg-[#152e22] border-yellow-500/60 hover:border-yellow-400 text-yellow-300 hover:bg-[#1e4231] shadow'
               }`}
             >
-              <span className="px-1 py-0.2 bg-black/40 rounded text-[9px] font-bold text-slate-400">R</span>
+              <span className="px-1 py-0.2 bg-black/40 rounded text-[9px] font-bold text-yellow-300">R</span>
               <Coins className="w-3.5 h-3.5 text-yellow-400" />
-              <span className="font-bold text-[11px]">Harvest Drones</span>
+              <span className="font-bold text-[11px]">Nature Bounty</span>
               {sim.commanderCooldowns.droneHarvest > 0 && (
                 <span className="text-[10px] text-slate-400">({sim.commanderCooldowns.droneHarvest.toFixed(0)}s)</span>
               )}
             </button>
 
-            {/* F: Elemental Burst */}
+            {/* F: Elemental Awakening */}
             <button
               onClick={() => {
                 if (burstReady) {
@@ -1420,15 +1578,15 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                 }
               }}
               disabled={!burstReady}
-              className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all cursor-pointer ${
                 !burstReady
-                  ? 'bg-[#0a141a] border-slate-800 text-slate-600 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-extrabold border-amber-300 shadow-[0_0_15px_#f59e0b] animate-pulse'
+                  ? 'bg-[#081510] border-slate-800 text-slate-600 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-extrabold border-amber-300 shadow-[0_0_15px_#f59e0b] animate-pulse'
               }`}
             >
               <span className="px-1 py-0.2 bg-black/40 rounded text-[9px] font-bold text-white">F</span>
               <Sparkles className="w-3.5 h-3.5" />
-              <span className="font-bold text-[11px]">BURST</span>
+              <span className="font-bold text-[11px]">AWAKENING</span>
               {!burstReady && (
                 <span className="text-[10px] text-slate-400">({burstCdRemaining.toFixed(0)}s)</span>
               )}
@@ -1437,9 +1595,9 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
         </div>
 
         {/* ============================================================== */}
-        {/* BOTTOM MILITARY TERMINAL STATUS DECK */}
+        {/* BOTTOM FANTASY CONTROL & STATUS DECK */}
         {/* ============================================================== */}
-        <div className="mt-3 px-3 py-2 bg-[#09171e] border-2 border-[#1a3845] rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+        <div className="mt-3 px-3 py-2 bg-[#0a1a15] border-2 border-emerald-900/60 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
           <div className="flex items-center gap-3">
             {onExitBattleToLobby && (
               <button
@@ -1447,26 +1605,42 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                   sound.playClick();
                   onExitBattleToLobby();
                 }}
-                className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded border border-slate-700 font-sans font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-2.5 py-1 bg-[#102d22] hover:bg-[#184433] text-emerald-200 hover:text-white rounded border border-emerald-700/50 font-sans font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
                 title="Keluar dari Pertempuran & Kembali ke Lobby"
               >
                 <span>← Lobby</span>
               </button>
             )}
 
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#06141a] rounded border border-[#1b3d4d]">
-              <Activity className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#061410] rounded border border-emerald-900/60">
+              <Activity className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
               <span className="text-[11px] text-slate-300">
-                Spore Toxicity: <strong className="text-rose-400">HIGH</strong>
+                Wild Corruption: <strong className="text-amber-400">ACTIVE</strong>
               </span>
             </div>
 
-            <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 bg-[#06141a] rounded border border-[#1b3d4d]">
-              <Crosshair className="w-3.5 h-3.5 text-amber-400" />
+            <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 bg-[#061410] rounded border border-emerald-900/60">
+              <MapPin className="w-3.5 h-3.5 text-emerald-400" />
               <span className="text-[11px] text-slate-300">
-                Sector: <strong className="text-cyan-300">{currentSector.name}</strong>
+                Sanctum: <strong className="text-emerald-300">{currentSector.name}</strong>
               </span>
             </div>
+
+            {/* View Mode Switcher: 3D Living Fantasy vs 2D Tactical Radar */}
+            <button
+              onClick={() => {
+                sound.playClick();
+                setViewMode((v) => (v === '3D' ? '2D' : '3D'));
+              }}
+              className={`px-3 py-1 rounded-lg text-xs font-bold font-mono border transition-all flex items-center gap-1.5 cursor-pointer shadow ${
+                viewMode === '3D'
+                  ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/60 shadow-[0_0_12px_rgba(16,185,129,0.35)] ring-1 ring-emerald-500/40'
+                  : 'bg-slate-900 text-slate-300 border-slate-700 hover:text-white'
+              }`}
+              title="Ganti mode visual antara 3D Living Fantasy (Default) dan 2D Tactical Radar"
+            >
+              <span>{viewMode === '3D' ? '🎥 3D Living Fantasy' : '🗺️ 2D Tactical Radar'}</span>
+            </button>
           </div>
 
           <div className="flex items-center gap-2 bg-[#0e2733] px-3 py-1 rounded-lg border border-[#22556b]">
@@ -1537,12 +1711,12 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
       {/* ============================================================== */}
       {/* QUICK DEPLOY CHAMPION BENCH DOCK (Direct Hero Management) */}
       {/* ============================================================== */}
-      <div className="bg-[#0a151b] border-2 border-[#1a3845] rounded-2xl p-3.5 shadow-lg flex flex-col gap-2.5">
-        <div className="flex items-center justify-between text-xs border-b border-[#1a3845] pb-2 font-mono">
+      <div className="bg-[#0b1c17] border-2 border-emerald-900/70 rounded-2xl p-3.5 shadow-lg flex flex-col gap-2.5">
+        <div className="flex items-center justify-between text-xs border-b border-emerald-900/60 pb-2 font-mono">
           <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-cyan-400" />
+            <Users className="w-4 h-4 text-emerald-400" />
             <span className="font-bold text-white tracking-wider">
-              DEFENDER SQUAD: {sim.heroes.length}/6 ACTIVE
+              DEFENDER SQUAD: {sim.heroes.length}/{sim.tacticalSlots.length} ACTIVE (Base Lv.{progression.getProgress().baseLevel || 1})
             </span>
           </div>
 
@@ -1550,16 +1724,16 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
           {sim.heroes.length === 0 && onQuickDeployStarterTeam && (
             <button
               onClick={onQuickDeployStarterTeam}
-              className="px-3 py-1 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-bold rounded-lg text-xs shadow-md transition-all flex items-center gap-1.5 animate-pulse"
+              className="px-3 py-1 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-bold rounded-lg text-xs shadow-md transition-all flex items-center gap-1.5 animate-pulse cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Quick Deploy Starter Squad (Pyra, Terra, Aqua)</span>
+              <span>Deploy Starter Squad (Pyra, Terra, Tide)</span>
             </button>
           )}
         </div>
 
         {/* Heroes List / Bench */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-2">
           {sim.heroes.map((hero) => {
             const isSelected = selectedHero?.instanceId === hero.instanceId;
             return (
@@ -1571,8 +1745,8 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                 }}
                 className={`p-2 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-2.5 ${
                   isSelected
-                    ? 'bg-[#162730] border-amber-400 shadow-[0_0_12px_#f59e0b]'
-                    : 'bg-[#06141a] border-[#1b3d4d] hover:border-cyan-500'
+                    ? 'bg-[#143527] border-amber-400 shadow-[0_0_12px_#f59e0b]'
+                    : 'bg-[#071712] border-emerald-900/60 hover:border-emerald-500/80'
                 }`}
               >
                 <HeroAvatar
@@ -1586,7 +1760,7 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                   <div className="text-xs font-bold text-white font-mono truncate">
                     {hero.name}
                   </div>
-                  <div className="text-[10px] text-cyan-300 font-mono">
+                  <div className="text-[10px] text-emerald-300 font-mono">
                     Lv.{hero.level} · P{hero.slotIndex + 1}
                   </div>
                 </div>
@@ -1595,7 +1769,7 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
           })}
 
           {/* Open Plots Prompts */}
-          {Array.from({ length: 6 - sim.heroes.length }).map((_, i) => (
+          {Array.from({ length: Math.max(0, sim.tacticalSlots.length - sim.heroes.length) }).map((_, i) => (
             <div
               key={`empty_${i}`}
               onClick={() => {
@@ -1605,7 +1779,7 @@ export const Battlefield: React.FC<BattlefieldProps> = ({
                   triggerDeploySlot(openSlot.slotIndex);
                 }
               }}
-              className="p-2 rounded-xl border border-dashed border-[#1b3d4d] hover:border-cyan-400 bg-[#06141a]/60 hover:bg-[#0c222c] cursor-pointer transition-colors flex items-center justify-center gap-1.5 text-xs text-slate-500 hover:text-cyan-300 font-mono"
+              className="p-2 rounded-xl border border-dashed border-emerald-800/60 hover:border-emerald-400 bg-[#071712]/60 hover:bg-[#102b21] cursor-pointer transition-colors flex items-center justify-center gap-1.5 text-xs text-slate-400 hover:text-emerald-300 font-mono"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>+ DEPLOY</span>

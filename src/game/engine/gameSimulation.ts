@@ -482,6 +482,17 @@ export class GameSimulation {
       effectiveDEF: template.baseDEF,
       range: template.baseRange,
 
+      // Combat profile from template
+      criticalChance: template.criticalChance ?? 0.1,
+      criticalDamage: template.criticalDamage ?? 1.5,
+      damageType: template.damageType ?? 'Physical',
+      targetCount: template.targetCount ?? 1,
+      splashRadius: template.splashRadius ?? 0,
+      statusEffect: template.statusEffect ?? 'None',
+      projectileType: template.projectileType ?? 'EnergyBeam',
+      silhouette: template.silhouette ?? 'WarriorMedium',
+      weaponType: template.weaponType ?? 'Sword',
+
       energy: 0,
       energyGainThisSecond: 0,
       secondTimer: 0,
@@ -500,6 +511,8 @@ export class GameSimulation {
     };
 
     slot.occupiedHeroInstanceId = instanceId;
+    slot.occupied = true;
+    slot.towerId = instanceId;
     slot.ownerPlayerId = playerRole;
     this.heroes.push(newHero);
     this.recalculateHeroStats(newHero);
@@ -599,6 +612,8 @@ export class GameSimulation {
     const sourceSlot = this.tacticalSlots.find((s) => s.slotIndex === sourceHero.slotIndex);
     if (sourceSlot) {
       sourceSlot.occupiedHeroInstanceId = undefined;
+      sourceSlot.occupied = false;
+      sourceSlot.towerId = null;
       sourceSlot.ownerPlayerId = undefined;
     }
     delete this.heroInvestments[sourceHero.instanceId];
@@ -646,6 +661,8 @@ export class GameSimulation {
     const slot = this.tacticalSlots.find((s) => s.slotIndex === hero.slotIndex);
     if (slot) {
       slot.occupiedHeroInstanceId = undefined;
+      slot.occupied = false;
+      slot.towerId = null;
       slot.ownerPlayerId = undefined;
     }
 
@@ -677,9 +694,15 @@ export class GameSimulation {
     if (!hero || !targetSlot || targetSlot.occupiedHeroInstanceId) return false;
 
     const oldSlot = this.tacticalSlots.find((s) => s.slotIndex === hero.slotIndex);
-    if (oldSlot) oldSlot.occupiedHeroInstanceId = undefined;
+    if (oldSlot) {
+      oldSlot.occupiedHeroInstanceId = undefined;
+      oldSlot.occupied = false;
+      oldSlot.towerId = null;
+    }
 
     targetSlot.occupiedHeroInstanceId = hero.instanceId;
+    targetSlot.occupied = true;
+    targetSlot.towerId = hero.instanceId;
     hero.slotIndex = targetSlotIndex;
     hero.tileX = targetSlot.tileX;
     hero.tileY = targetSlot.tileY;
@@ -1455,14 +1478,34 @@ export class GameSimulation {
             e.tileX = path[path.length - 1].x;
             e.tileY = path[path.length - 1].y;
 
-            // Reached Base (PRD A4)
-            const leakDmg = ENEMY_REGISTRY[e.templateId]?.leakDamage ?? 1;
+            // Reached Base: Meaningful leak damage so defeat is a real, high-stakes threat!
+            // Normal: 10 HP (10 leaks = defeat on standard Base)
+            // Elite: 25 HP (4 leaks = defeat)
+            // MiniBoss: 50 HP (2 leaks = defeat)
+            // Boss: 75 HP (catastrophic breach)
+            // MapBoss: 100 HP (instant annihilation)
+            let leakDmg = 10;
+            if (e.enemyClass === 'Elite') {
+              leakDmg = 25;
+            } else if (e.enemyClass === 'MiniBoss') {
+              leakDmg = 50;
+            } else if (e.enemyClass === 'Boss') {
+              leakDmg = 75;
+            } else if (e.enemyClass === 'MapBoss') {
+              leakDmg = 100;
+            } else {
+              leakDmg = 10;
+            }
+
             this.baseHP = Math.max(0, this.baseHP - leakDmg);
             this.addLog(`ALERT: ${e.name} breached the Base! -${leakDmg} Base HP (Remaining: ${this.baseHP}).`, 'leak');
+            this.addFloatingNumber(`-${leakDmg} CORE HP`, e.tileX, e.tileY, '#ef4444', true);
+            this.addParticleBurst(e.tileX, e.tileY, '#f43f5e', 22, 5.0);
+
             enemiesToRemove.push(e.instanceId);
             sound.playBaseHit();
-            this.baseAlertFlashTimer = 0.6;
-            this.screenShakeTimer = 0.45;
+            this.baseAlertFlashTimer = 0.8;
+            this.screenShakeTimer = 0.55;
 
             if (this.baseHP <= 0) {
               this.phase = 'LEVEL_DEFEAT';
@@ -1839,8 +1882,10 @@ export class GameSimulation {
     this.commanderCooldowns.bioBarrier = 28.0;
 
     sound.playShieldOvercharge();
-    const healAmount = Math.min(25, 100 - this.baseHP);
-    this.baseHP = Math.min(100, this.baseHP + 25);
+    const baseLevel = progression.getProgress().baseLevel || 1;
+    const maxBaseHP = BALANCE_CONFIG.baseStats.baseHP[baseLevel] || 100;
+    const healAmount = Math.min(25, maxBaseHP - this.baseHP);
+    this.baseHP = Math.min(maxBaseHP, this.baseHP + 25);
 
     // Repel enemies within 4.5 tiles of Base
     const basePoint = { x: 10.5, y: 4.0 };
@@ -1989,21 +2034,23 @@ export class GameSimulation {
 
       // Check if this was the final wave of the current Level
       if (this.currentWaveInLevel >= this.levelWavesCount) {
+        const baseLevel = progression.getProgress().baseLevel || 1;
+        const maxBaseHP = BALANCE_CONFIG.baseStats.baseHP[baseLevel] || 100;
+        const isFlawless = this.baseHP >= maxBaseHP;
+
         // Calculate 3-Star Rating
         let stars = 1;
-        if (this.baseHP >= 100) {
+        if (this.baseHP >= maxBaseHP) {
           stars = 3; // Flawless Base Defense
-        } else if (this.baseHP >= (this.currentLevel >= 4 ? 60 : 70)) {
-          stars = 2;
+        } else if (this.baseHP >= Math.round(maxBaseHP * 0.6)) {
+          stars = 2; // Strong Defense (>= 60% HP)
+        } else {
+          stars = 1; // Survived with base damage (< 60% HP)
         }
 
         const score = this.baseHP * 10 + this.totalEnemiesDefeated * 30 + Math.round(this.totalDamageDealt / 80);
         const rewardGold = levelCfg.reward.gold;
         this.addPlayerGold(rewardGold);
-
-        const baseLevel = progression.getProgress().baseLevel || 1;
-        const maxBaseHP = BALANCE_CONFIG.baseStats.baseHP[baseLevel] || 100;
-        const isFlawless = this.baseHP >= maxBaseHP;
 
         // Persist victory in progression storage
         const progResult = progression.completeLevel(

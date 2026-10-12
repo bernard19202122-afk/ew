@@ -57,6 +57,22 @@ export default function App() {
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [selectedHero, setSelectedHero] = useState<HeroInstance | null>(null);
   const [deploySlotIndex, setDeploySlotIndex] = useState<number | null>(null);
+  const [battleResultData, setBattleResultData] = useState<{
+    phase: 'LEVEL_VICTORY' | 'LEVEL_DEFEAT';
+    currentLevel: number;
+    currentWaveInLevel: number;
+    levelWavesCount: number;
+    baseHP: number;
+    totalDamageDealt: number;
+    totalEnemiesDefeated: number;
+    victoryDetails: {
+      levelNumber: number;
+      stars: number;
+      score: number;
+      rewardGold: number;
+      newlyUnlocked: boolean;
+    } | null;
+  } | null>(null);
 
   // Modals state (Non-battle sub-screens)
   const [isBaseUpgradeOpen, setIsBaseUpgradeOpen] = useState<boolean>(false);
@@ -144,10 +160,21 @@ export default function App() {
     return () => cancelAnimationFrame(animId);
   }, [sim, gameState, countdownActive]);
 
-  // Battle Result Detection
+  // Battle Result Detection: Trigger victory/defeat screen
   useEffect(() => {
     if (gameState === 'BATTLE' && (sim.phase === 'LEVEL_VICTORY' || sim.phase === 'LEVEL_DEFEAT')) {
-      sim.stopBattleSession();
+      sim.isBattleActive = false;
+      sim.isPaused = true;
+      setBattleResultData({
+        phase: sim.phase,
+        currentLevel: sim.currentLevel,
+        currentWaveInLevel: sim.currentWaveInLevel,
+        levelWavesCount: sim.levelWavesCount,
+        baseHP: sim.baseHP,
+        totalDamageDealt: sim.totalDamageDealt,
+        totalEnemiesDefeated: sim.totalEnemiesDefeated,
+        victoryDetails: sim.levelVictoryDetails,
+      });
       setGameState('RESULT');
     }
   }, [gameState, sim.phase, sim]);
@@ -155,6 +182,7 @@ export default function App() {
   // Return to Lobby handler (PRD Section 13: Return to Lobby & Battle Cleanup)
   const handleReturnToLobby = () => {
     sound.playClick();
+    setBattleResultData(null);
     sim.stopBattleSession();
     setSelectedHero(null);
     setCountdownActive(false);
@@ -164,6 +192,7 @@ export default function App() {
 
   // Pre-Battle Launch (PRD Section 10 & 11)
   const handleStartBattleFromPreBattle = (chosenSquad: string[]) => {
+    setBattleResultData(null);
     sim.createNewGameSession(selectedLevelId, playerMode, myRole);
 
     // Deploy chosen squad into the initial tactical slots
@@ -314,15 +343,28 @@ export default function App() {
 
       {/* Main Content Viewport */}
       <main className="flex-1 w-full max-w-7xl mx-auto p-3 sm:p-5 flex flex-col gap-4">
-        {/* 1. STATE: MAIN LOBBY (PRD Sections 19-23) */}
-        {activeTab === 'lobby' && (
+        {/* 1. STATE: MAIN LOBBY (PRD Sections 19-23) & Fallback */}
+        {(activeTab === 'lobby' ||
+          activeTab === 'base' ||
+          activeTab === 'missions' ||
+          activeTab === 'profile' ||
+          !['stages', 'pre_battle', 'coop', 'battlefield', 'roster', 'balance', 'tests', 'codex'].includes(activeTab)) && (
           <MainLobby
             progress={progression.getProgress()}
             onOpenPlayFlow={handleOpenPlayFlow}
             onOpenHeroes={() => setActiveTab('roster')}
-            onOpenProfile={() => setIsProfileOpen(true)}
-            onOpenBase={() => setIsBaseUpgradeOpen(true)}
-            onOpenMissions={() => setIsMissionsOpen(true)}
+            onOpenProfile={() => {
+              setIsProfileOpen(true);
+              setActiveTab('profile');
+            }}
+            onOpenBase={() => {
+              setIsBaseUpgradeOpen(true);
+              setActiveTab('base');
+            }}
+            onOpenMissions={() => {
+              setIsMissionsOpen(true);
+              setActiveTab('missions');
+            }}
             onOpenSettings={() => setIsSettingsOpen(true)}
             onOpenMultiplayer={() => setActiveTab('coop')}
             onOpenTests={() => setActiveTab('tests')}
@@ -498,64 +540,35 @@ export default function App() {
 
         {/* 9. SUB-SCREENS: Codex */}
         {activeTab === 'codex' && <CodexView />}
-
-        {/* 10. SUB-SCREENS: Base Upgrade */}
-        {activeTab === 'base' && (
-          <BaseUpgradeModal
-            onClose={() => {
-              setActiveTab('lobby');
-              setIsBaseUpgradeOpen(false);
-            }}
-            onRefresh={() => setRenderTrigger((prev) => (prev + 1) % 10000)}
-          />
-        )}
-
-        {/* 11. SUB-SCREENS: Missions */}
-        {activeTab === 'missions' && (
-          <MissionsModal
-            onClose={() => {
-              setActiveTab('lobby');
-              setIsMissionsOpen(false);
-            }}
-            onRefresh={() => setRenderTrigger((prev) => (prev + 1) % 10000)}
-          />
-        )}
-
-        {/* 12. SUB-SCREENS: Profile */}
-        {activeTab === 'profile' && (
-          <ProfileModal
-            onClose={() => {
-              setActiveTab('lobby');
-              setIsProfileOpen(false);
-            }}
-          />
-        )}
       </main>
 
       {/* Level Victory & Defeat Modal (PRD Section 13, 14) */}
-      {(sim.phase === 'LEVEL_VICTORY' || sim.phase === 'LEVEL_DEFEAT') && (
+      {(battleResultData || sim.phase === 'LEVEL_VICTORY' || sim.phase === 'LEVEL_DEFEAT') && (
         <LevelResultModal
-          phase={sim.phase}
-          currentLevel={sim.currentLevel}
-          currentWaveInLevel={sim.currentWaveInLevel}
-          levelWavesCount={sim.levelWavesCount}
-          baseHP={sim.baseHP}
-          totalDamageDealt={sim.totalDamageDealt}
-          totalEnemiesDefeated={sim.totalEnemiesDefeated}
-          victoryDetails={sim.levelVictoryDetails}
+          phase={battleResultData?.phase || (sim.phase as 'LEVEL_VICTORY' | 'LEVEL_DEFEAT')}
+          currentLevel={battleResultData?.currentLevel ?? sim.currentLevel}
+          currentWaveInLevel={battleResultData?.currentWaveInLevel ?? sim.currentWaveInLevel}
+          levelWavesCount={battleResultData?.levelWavesCount ?? sim.levelWavesCount}
+          baseHP={battleResultData?.baseHP ?? sim.baseHP}
+          totalDamageDealt={battleResultData?.totalDamageDealt ?? sim.totalDamageDealt}
+          totalEnemiesDefeated={battleResultData?.totalEnemiesDefeated ?? sim.totalEnemiesDefeated}
+          victoryDetails={battleResultData?.victoryDetails ?? sim.levelVictoryDetails}
           onRetry={() => {
+            setBattleResultData(null);
             sim.stopBattleSession();
             setGameState('PRE_BATTLE');
             setActiveTab('pre_battle');
           }}
           onNextLevel={() => {
-            const nextLvl = Math.min(10, sim.currentLevel + 1);
+            setBattleResultData(null);
+            const nextLvl = Math.min(10, (battleResultData?.currentLevel ?? sim.currentLevel) + 1);
             setSelectedLevelId(nextLvl);
             sim.stopBattleSession();
             setGameState('PRE_BATTLE');
             setActiveTab('pre_battle');
           }}
           onOpenStageSelect={() => {
+            setBattleResultData(null);
             sim.stopBattleSession();
             setGameState('STAGE_SELECT');
             setActiveTab('stages');
@@ -565,24 +578,35 @@ export default function App() {
       )}
 
       {/* Base Upgrade Modal */}
-      {isBaseUpgradeOpen && activeTab !== 'base' && (
+      {(isBaseUpgradeOpen || activeTab === 'base') && (
         <BaseUpgradeModal
-          onClose={() => setIsBaseUpgradeOpen(false)}
+          onClose={() => {
+            setIsBaseUpgradeOpen(false);
+            if (activeTab === 'base') setActiveTab('lobby');
+          }}
           onRefresh={() => setRenderTrigger((prev) => (prev + 1) % 10000)}
         />
       )}
 
       {/* Missions & Quests Modal */}
-      {isMissionsOpen && activeTab !== 'missions' && (
+      {(isMissionsOpen || activeTab === 'missions') && (
         <MissionsModal
-          onClose={() => setIsMissionsOpen(false)}
+          onClose={() => {
+            setIsMissionsOpen(false);
+            if (activeTab === 'missions') setActiveTab('lobby');
+          }}
           onRefresh={() => setRenderTrigger((prev) => (prev + 1) % 10000)}
         />
       )}
 
       {/* Commander Profile Modal */}
-      {isProfileOpen && activeTab !== 'profile' && (
-        <ProfileModal onClose={() => setIsProfileOpen(false)} />
+      {(isProfileOpen || activeTab === 'profile') && (
+        <ProfileModal
+          onClose={() => {
+            setIsProfileOpen(false);
+            if (activeTab === 'profile') setActiveTab('lobby');
+          }}
+        />
       )}
 
       {/* Settings Modal */}

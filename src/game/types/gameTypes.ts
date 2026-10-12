@@ -43,6 +43,47 @@ export interface EnemyStatusState {
   };
 }
 
+export type DamageType = 'Physical' | 'Magic' | 'Piercing' | 'Blunt' | 'Slashing';
+
+export type ProjectileType =
+  | 'fire_slash'
+  | 'fire_orb'
+  | 'solar_beam'
+  | 'arrow_fire'
+  | 'water_splash'
+  | 'water_orb'
+  | 'arrow_water'
+  | 'water_whirlpool'
+  | 'rock_spike'
+  | 'boulder'
+  | 'arrow_wind'
+  | 'wind_blade'
+  | 'wind_gust'
+  | 'storm_bolt'
+  | 'melee';
+
+export type HeroSilhouette =
+  | 'HeavyTank'
+  | 'Colossus'
+  | 'Warrior'
+  | 'Mage'
+  | 'SupportPriestess'
+  | 'Ranger'
+  | 'Assassin'
+  | 'Brawler';
+
+export type WeaponType =
+  | 'Greatsword'
+  | 'Warhammer'
+  | 'Staff'
+  | 'Trident'
+  | 'Bow'
+  | 'DualDaggers'
+  | 'TowerShield'
+  | 'Scepter'
+  | 'Chakram'
+  | 'Fans';
+
 export interface HeroTemplate {
   id: string;
   name: string;
@@ -55,6 +96,26 @@ export interface HeroTemplate {
   baseDEF: number;
   baseRange: number; // In tiles
   targetPriority: TargetPriority;
+
+  // PRD Addendum Section 3: Hero Combat & Damage Profile
+  criticalChance: number; // e.g. 0.15 = 15%
+  criticalDamage: number; // e.g. 1.75 = 175%
+  damageType: DamageType;
+  targetCount: number; // 1: single, >1: cleave, 0: full splash
+  splashRadius: number; // in tiles
+  statusEffect: 'Burn' | 'Slow' | 'Stun' | 'ArmorBreak' | 'Knockback' | 'None';
+  projectileType: ProjectileType;
+  silhouette: HeroSilhouette;
+  weaponType: WeaponType;
+  attackVFX: string;
+  impactVFX: string;
+  attackSFX: string;
+
+  // PRD Addendum Section 8-10: Hero Shop / Acquisition
+  priceGold: number;
+  priceCrystals: number;
+  requiredPlayerLevel: number;
+
   activeSkillName: string;
   activeSkillCost: number; // Energy cost
   activeSkillCooldown: number; // Seconds
@@ -86,6 +147,17 @@ export interface HeroInstance {
   baseDEF: number;
   effectiveDEF: number;
   range: number;
+
+  // Combat profile
+  criticalChance: number;
+  criticalDamage: number;
+  damageType: DamageType;
+  targetCount: number;
+  splashRadius: number;
+  statusEffect: 'Burn' | 'Slow' | 'Stun' | 'ArmorBreak' | 'Knockback' | 'None';
+  projectileType: ProjectileType;
+  silhouette: HeroSilhouette;
+  weaponType: WeaponType;
 
   energy: number; // 0 to 100
   energyGainThisSecond: number;
@@ -217,10 +289,13 @@ export interface CombatLogEntry {
 }
 
 export interface TacticalSlot {
+  padId?: string; // Unique TowerPad ID e.g. 'PAD_01'
   slotIndex: number;
   tileX: number;
   tileY: number;
   terrainBonus?: Element;
+  occupied?: boolean;
+  towerId?: string | null;
   occupiedHeroInstanceId?: string;
   ownerPlayerId?: 'P1' | 'P2';
 }

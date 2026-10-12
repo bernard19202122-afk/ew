@@ -51,20 +51,20 @@ export const LANE_1_PATH: GridPoint[] = [
 
 export const LANE_PATHS = [LANE_0_PATH, LANE_1_PATH];
 
-// 12 Valid Tactical Hero Placement Slots with Terrain Elemental Affinities
+// 12 Valid Tactical Hero Placement Slots with Terrain Elemental Affinities (Single Source of Truth)
 export const TACTICAL_HERO_SLOTS: TacticalSlot[] = [
-  { slotIndex: 0, tileX: 2, tileY: 0, terrainBonus: 'Fire' },
-  { slotIndex: 1, tileX: 4, tileY: 0, terrainBonus: 'Wind' },
-  { slotIndex: 2, tileX: 6, tileY: 1, terrainBonus: 'Water' },
-  { slotIndex: 3, tileX: 3, tileY: 3, terrainBonus: 'Earth' },
-  { slotIndex: 4, tileX: 5, tileY: 3, terrainBonus: 'Earth' },
-  { slotIndex: 5, tileX: 7, tileY: 3, terrainBonus: 'Fire' },
-  { slotIndex: 6, tileX: 3, tileY: 4, terrainBonus: 'Water' },
-  { slotIndex: 7, tileX: 5, tileY: 4, terrainBonus: 'Wind' },
-  { slotIndex: 8, tileX: 7, tileY: 4, terrainBonus: 'Earth' },
-  { slotIndex: 9, tileX: 6, tileY: 6, terrainBonus: 'Water' },
-  { slotIndex: 10, tileX: 2, tileY: 7, terrainBonus: 'Fire' },
-  { slotIndex: 11, tileX: 4, tileY: 7, terrainBonus: 'Wind' },
+  { padId: 'PAD_01', slotIndex: 0, tileX: 2, tileY: 0, terrainBonus: 'Fire', occupied: false, towerId: null },
+  { padId: 'PAD_02', slotIndex: 1, tileX: 4, tileY: 0, terrainBonus: 'Wind', occupied: false, towerId: null },
+  { padId: 'PAD_03', slotIndex: 2, tileX: 6, tileY: 1, terrainBonus: 'Water', occupied: false, towerId: null },
+  { padId: 'PAD_04', slotIndex: 3, tileX: 3, tileY: 3, terrainBonus: 'Earth', occupied: false, towerId: null },
+  { padId: 'PAD_05', slotIndex: 4, tileX: 5, tileY: 3, terrainBonus: 'Earth', occupied: false, towerId: null },
+  { padId: 'PAD_06', slotIndex: 5, tileX: 7, tileY: 3, terrainBonus: 'Fire', occupied: false, towerId: null },
+  { padId: 'PAD_07', slotIndex: 6, tileX: 3, tileY: 4, terrainBonus: 'Water', occupied: false, towerId: null },
+  { padId: 'PAD_08', slotIndex: 7, tileX: 5, tileY: 4, terrainBonus: 'Wind', occupied: false, towerId: null },
+  { padId: 'PAD_09', slotIndex: 8, tileX: 7, tileY: 4, terrainBonus: 'Earth', occupied: false, towerId: null },
+  { padId: 'PAD_10', slotIndex: 9, tileX: 6, tileY: 6, terrainBonus: 'Water', occupied: false, towerId: null },
+  { padId: 'PAD_11', slotIndex: 10, tileX: 2, tileY: 7, terrainBonus: 'Fire', occupied: false, towerId: null },
+  { padId: 'PAD_12', slotIndex: 11, tileX: 4, tileY: 7, terrainBonus: 'Wind', occupied: false, towerId: null },
 ];
 
 /**
